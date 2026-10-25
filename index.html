@@ -58,6 +58,7 @@ body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65;
 .chipbtn,.way .wh .small,.seg button,.pill,.step .right span{white-space:nowrap;flex-shrink:0}
 .ways .w span{white-space:nowrap}
 .cat .nm{align-items:flex-start}.cat .nm i{margin-top:7px;flex-shrink:0}
+.tile{text-align:left}
 @media (max-width:400px){.tile{flex-direction:column;align-items:flex-start;gap:6px}}
 .wrap{max-width:440px;margin:0 auto;padding-block:16px 0;display:flex;flex-direction:column;gap:14px;min-height:100vh}
 button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -656,7 +657,8 @@ function render(){({home:renderHome,level:renderLevel,record:renderRecord,librar
 /* 日本語を文節のまとまりで改行させる：ひらがなの後に漢字・カタカナ・英数字・かっこが来る位置と、「・」「／」の後に改行候補を入れる。
    CSSの word-break:keep-all と組み合わせて、単語の途中で折り返さないようにする */
 const RE_H=/[\u3041-\u309F]/,RE_NEXT=/[\u4E00-\u9FFF\u3005\u30A0-\u30FFA-Za-z0-9（「]/,RE_AFTER=/[・／]/;
-function addWbr(root){
+function fixSlash(root){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(w.nextNode()){const n=w.currentNode;if(n.data.includes(" / "))n.data=n.data.replace(/ \/ /g,"\u00A0/ ")}}
+function addWbr(root){fixSlash(root);
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];
   while(w.nextNode()){const n=w.currentNode;const pe=n.parentElement;if(pe.closest("input,textarea,script,style")||getComputedStyle(pe).whiteSpace==="nowrap")continue;if(/[\u3041-\u30FF\u4E00-\u9FFF]/.test(n.data))nodes.push(n)}
   for(const n of nodes){const s=n.data;const cut=[];
