@@ -116,6 +116,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .row>span:nth-child(2){flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
 .row b{font-size:15px;font-weight:500}
 .row span span{font-size:12.5px;color:var(--muted)}
+.row .stepic{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--ink);font-family:var(--f-en);font-weight:700;font-size:13px}
 .row .chev{color:var(--muted);flex-shrink:0}
 .row .chev svg{width:16px;height:16px}
 
@@ -827,7 +828,7 @@ const WAYS=[
   {t:"desc",short:"人・物の\n説明",name:"人・物を説明する（that / who）",lv:"ステップ4",ex:[[["core","I know a cafe"],["desc","that has good coffee."]],[["core","I have a friend"],["desc","who loves traveling."]]]}
 ];
 
-function render(){({home:renderHome,pattern:renderPattern,level:renderLevel,record:renderRecord,library:renderLibrary,practice:renderPractice,summary:renderSummary}[view])();addWbr(app)}
+function render(){({home:renderHome,tests:renderTests,pattern:renderPattern,level:renderLevel,record:renderRecord,library:renderLibrary,practice:renderPractice,summary:renderSummary}[view])();addWbr(app)}
 /* 日本語を文節のまとまりで改行させる：ひらがなの後に漢字・カタカナ・英数字・かっこが来る位置と、「・」「／」の後に改行候補を入れる。
    CSSの word-break:keep-all と組み合わせて、単語の途中で折り返さないようにする */
 const RE_H=/[\u3041-\u309F]/,RE_NEXT=/[\u4E00-\u9FFF\u3005\u30A0-\u30FFA-Za-z0-9（「]/,RE_AFTER=/[・／]/;
@@ -865,6 +866,7 @@ function renderHome(){
   <div class="rows">
     <button class="row" data-act="go" data-v="library"><span class="ic">${IC.book}</span><span><b>5つのパターン</b><span>お手本と例文</span></span><span class="chev">${IC.chev}</span></button>
     <button class="row" data-act="mix"><span class="ic">${IC.shuf}</span><span><b>ランダム出題</b><span>全ステップをまぜて</span></span><span class="chev">${IC.chev}</span></button>
+    <button class="row" data-act="go" data-v="tests"><span class="ic">${IC.check}</span><span><b>ステップごとの確認テスト</b><span>ステップ1〜5、それぞれ5問。ヒントなしで全文を言えるか確かめよう</span></span><span class="chev">${IC.chev}</span></button>
     <button class="row" data-act="test2"><span class="ic">${IC.check}</span><span><b>総合確認テスト</b><span>ステップ5まで終わったら挑戦しよう！毎回ちがう問題が出ます</span></span><span class="chev">${IC.chev}</span></button>
   </div>
   ${micBlocked&&store.settings.judge==="mic"?`<div class="banner">この画面ではマイクが使えないため、「自分で判定」で進みます。</div>`:""}
@@ -887,6 +889,12 @@ const marks=ids=>`<span class="marks">${ids.map(id=>`<i class="${lastRes(id)||""
 
 const RES_LABEL={ok:"ヒントなし",hint:"ヒントあり",ng:"要復習"};
 function testLine(mode){const x=(store.tests||{})[mode];return x&&x.last?`前回 ${x.last.ok} / ${x.last.total}問　・　最高 ${x.best} / ${x.last.total}問`:"まだ挑戦していません"}
+function renderTests(){
+  app.innerHTML=navTop("確認テスト")+`
+  <div class="qhead"><h2>ステップごとの確認テスト</h2><p>練習が終わったら、ヒントなしで全文を言えるか確かめよう。練習とは別の、初めて見る問題です（各5問）。</p></div>
+  <div class="rows">${LEVELS.map(l=>`<button class="row" data-act="steptest" data-v="${l.n}"><span class="ic stepic">${l.n}</span><span><b>ステップ${l.n}の確認テスト</b><span>${esc(l.name)}<br>${testLine("st"+l.n)}</span></span><span class="chev">${IC.chev}</span></button>`).join("")}</div>
+  <div class="rows"><button class="row" data-act="test2"><span class="ic">${IC.check}</span><span><b>総合確認テスト</b><span>ステップ5まで終わったら挑戦しよう！毎回ちがう問題が出ます</span></span><span class="chev">${IC.chev}</span></button></div>`;
+}
 function nextIndex(ids){let i=ids.findIndex(id=>!store.sets[id]);if(i<0)i=ids.findIndex(id=>lastRes(id)!=="ok");return i}
 function renderLevel(){
   const l=LEVELS[lvView-1];const ids=l.ids;const nx=nextIndex(ids);
