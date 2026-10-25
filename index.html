@@ -1013,8 +1013,8 @@ function startSession(ids,mode="practice"){backTo=view==="practice"||view==="sum
 function startSet(){
   const set=BYID[sess.ids[sess.i]];
   /* ステップ1だけ「結論を選ぶ」から。ステップ2以降は英語にするところから */
-  const steps=isTest()?[{k:"full"}]:set.lv===1?[{k:"pick"},{k:"core"},{k:"preview"}]:[{k:"core"}];
-  if(!isTest()&&set.lv!==1){set.adds.forEach((a,i)=>steps.push({k:"add",i}));steps.push({k:"full"})}
+  const steps=(isTest()||sess.direct)?[{k:"full"}]:set.lv===1?[{k:"pick"},{k:"core"},{k:"preview"}]:[{k:"core"}];
+  if(!isTest()&&!sess.direct&&set.lv!==1){set.adds.forEach((a,i)=>steps.push({k:"add",i}));steps.push({k:"full"})}
   const opts=shuffle([{t:set.coreJp,ok:true},{t:set.jp,why:"full"},...(set.adds.length?[{t:set.adds[0].jp,why:"detail"}]:[])]);
   st={set,steps,si:0,res:{},opts,picked:[],ph:"ready",hint:0,heard:""};
   if(steps[0].k!=="pick"&&!sess.chosen)st.ph="choose";
@@ -1049,6 +1049,7 @@ function builtHTML(){
 function tabsHTML(){
   const set=st.set,s=curStep();
   if(isTest())return`<div class="tabs glass"><span class="tab cur"><i>!</i>ヒントなしで、最初から全部言う</span></div>`;
+  if(sess.direct)return`<div class="tabs glass"><span class="tab cur"><i>!</i>いきなり全文を言う</span></div>`;
   const names=set.lv===1?["結論を選ぶ","英語にする","まとめ"]:["英語にする","後ろに足す","通しで言う"];
   const idx=k=>set.lv===1?({pick:0,core:1,preview:2})[k]:({core:0,add:1,full:2})[k];
   const ci=idx(s.k);
@@ -1074,7 +1075,7 @@ function renderPractice(){
   }else{
     if(s.k==="core"){h2="結論の文を英語で";sub=""}
     if(s.k==="add"){const a=set.adds[s.i];h2="後ろに「"+a.jp+"」を足そう";sub=TY(a.t).l+"を足す　"+(s.i+1)+" / "+set.adds.length}
-    if(s.k==="full"){h2=isTest()?"英語で言ってみよう":"最初から通して言おう";sub=isTest()?"日本語を見て、一発で全文を言おう":"ヒントなしで挑戦"}
+    if(s.k==="full"){h2=isTest()||sess.direct?"英語で言ってみよう":"最初から通して言おう";sub=isTest()?"日本語を見て、一発で全文を言おう":sess.direct?"日本語を見て、全文を英語で言おう":"ヒントなしで挑戦"}
     if(st.ph==="choose"){h2="どうやって練習する？";sub="このあとの問題も同じ方法で進みます。右上のボタンでいつでも切り替えられます"}
     const hl=hintList(),hs=hl.slice(0,st.hint).map(h=>`<div class="note hi">${h}</div>`).join("");
     stage=builtHTML()+hs;
@@ -1152,7 +1153,7 @@ function renderSummary(){
   app.innerHTML=`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">おつかれさまでした</div><span style="width:40px"></span></header>
   <div class="qhead" style="padding-top:8px"><h2>${n} / ${sess.res.length} 問を<br>ヒントなしで言えました</h2><p>止まったところは、学習記録からもう一度練習できます</p></div>
   <section class="glass panel"><div>${sess.res.map(r=>`<div class="li"><span class="q">${esc(BYID[r.id].jp)}${r.stuck?`<br><span class="small">止まったところ：${esc(r.stuck)}</span>`:""}</span><span class="chip ${r.res}">${lab[r.res]}</span></div>`).join("")}</div></section>
-  <div class="tiles">${isTest()?(isStepTest()?`<button class="glass tile" data-act="steptest" data-v="${sess.mode.slice(2)}"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>同じテストで</span></span></button>`:`<button class="glass tile" data-act="test2"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>新しい5問で</span></span></button>`):`<button class="glass tile" data-act="start" data-ids="${sess.ids.join(",")}"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>同じ問題で</span></span></button>`}
+  <div class="tiles">${isTest()?(isStepTest()?`<button class="glass tile" data-act="steptest" data-v="${sess.mode.slice(2)}"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>同じテストで</span></span></button>`:`<button class="glass tile" data-act="test2"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>新しい5問で</span></span></button>`):sess.direct?`<button class="glass tile" data-act="mix"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>新しい5問で</span></span></button>`:`<button class="glass tile" data-act="start" data-ids="${sess.ids.join(",")}"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>同じ問題で</span></span></button>`}
   <button class="glass tile" data-act="go" data-v="record"><span class="ic">${IC.chart}</span><span><b>学習記録</b><span>止まった場所を見る</span></span></button></div>
   <div class="dock"><button class="big" data-act="today">次の練習へ</button></div>`;
 }
@@ -1164,7 +1165,7 @@ app.addEventListener("click",async e=>{
   else if(act==="level"){lvView=+b.dataset.v;if(view!=="level")navStack.push(view);view="level";render();window.scrollTo(0,0)}
   else if(act==="back"){goBack()}
   else if(act==="today"){startSession(todayQ&&todayQ.length&&view==="home"?todayQ:buildToday())}
-  else if(act==="mix"){startSession(shuffle(PRACTICE.map(s=>s.id)).slice(0,5))}
+  else if(act==="mix"){startSession(shuffle(PRACTICE.filter(s=>s.lv>1&&s.adds.every(x=>x.en)).map(s=>s.id)).slice(0,5));sess.direct=true;startSet();render()}
   else if(act==="test1"){const tried=PRACTICE.filter(s=>store.sets[s.id]&&s.lv!==1).map(s=>s.id);const pool=tried.length>=5?tried:PRACTICE.filter(s=>s.lv!==1).map(s=>s.id);startSession(shuffle(pool).slice(0,5),"t1")}
   else if(act==="test2"){startSession(genSession(5),"t2")}
   else if(act==="steptest"){const n=+b.dataset.v;startSession(STEP_TESTS[n].map(s=>s.id),"st"+n)}
