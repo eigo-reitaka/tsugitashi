@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#cfd9ff">
+<title>つぎ足し英作文</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Lexend:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap">
+<style>
+/* Layout: phone-app column. Home = level staircase + one big "続きから" button. Practice = step tabs, one large glass card, CTA docked at the bottom. */
+:root{
+  --sky1:#cfd9ff; --sky2:#efe9ff; --blob1:rgba(255,255,255,.75); --blob2:rgba(168,186,255,.55);
+  --glass:rgba(255,255,255,.66); --glass-strong:rgba(255,255,255,.9); --glass-line:rgba(255,255,255,.85);
+  --ink:#161a2e; --muted:#5a6182; --faint:#9aa1bf; --line:rgba(22,26,46,.10);
+  --accent:#4656ec; --accent-soft:rgba(70,86,236,.14);
+  --cta:#161a2e; --cta-ink:#ffffff; --mark:rgba(255,212,72,.6);
+  --ok:#1d8556; --hint:#b7741a; --ng:#c2410c; --shadow:0 10px 30px rgba(40,50,120,.12);
+  --t-core:#161a2e; --t-place:#0d8587; --t-time:#b8740b; --t-with:#7448cc; --t-by:#2477c9;
+  --t-for:#bf3f74; --t-purpose:#3a8a2b; --t-desc:#5f6476; --t-reason:#b0442a; --t-cond:#4a68aa;
+  --f-display:"Dela Gothic One","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic","Meiryo",sans-serif;
+  --f-en:"Lexend","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --sky1:#141a33; --sky2:#1e1735; --blob1:rgba(90,104,200,.22); --blob2:rgba(140,90,200,.18);
+  --glass:rgba(32,37,64,.66); --glass-strong:rgba(38,44,76,.92); --glass-line:rgba(255,255,255,.08);
+  --ink:#eceefb; --muted:#a6acca; --faint:#6d7396; --line:rgba(255,255,255,.10);
+  --accent:#95a2ff; --accent-soft:rgba(149,162,255,.16);
+  --cta:#eceefb; --cta-ink:#141830; --mark:rgba(255,206,70,.28);
+  --ok:#4fc58b; --hint:#e3a447; --ng:#f07a4a; --shadow:0 10px 30px rgba(0,0,0,.35);
+  --t-core:#eceefb; --t-place:#3cc4c6; --t-time:#e6a83c; --t-with:#a98bf0; --t-by:#64aef0;
+  --t-for:#ee7aa7; --t-purpose:#7cc96b; --t-desc:#a3a8bb; --t-reason:#ec8366; --t-cond:#8ea6e0;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --sky1:#141a33; --sky2:#1e1735; --blob1:rgba(90,104,200,.22); --blob2:rgba(140,90,200,.18);
+  --glass:rgba(32,37,64,.66); --glass-strong:rgba(38,44,76,.92); --glass-line:rgba(255,255,255,.08);
+  --ink:#eceefb; --muted:#a6acca; --faint:#6d7396; --line:rgba(255,255,255,.10);
+  --accent:#95a2ff; --accent-soft:rgba(149,162,255,.16);
+  --cta:#eceefb; --cta-ink:#141830; --mark:rgba(255,206,70,.28);
+  --ok:#4fc58b; --hint:#e3a447; --ng:#f07a4a; --shadow:0 10px 30px rgba(0,0,0,.35);
+  --t-core:#eceefb; --t-place:#3cc4c6; --t-time:#e6a83c; --t-with:#a98bf0; --t-by:#64aef0;
+  --t-for:#ee7aa7; --t-purpose:#7cc96b; --t-desc:#a3a8bb; --t-reason:#ec8366; --t-cond:#8ea6e0;
+  color-scheme:dark}
+html,body{min-height:100%}
+body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65;
+  background:
+    radial-gradient(40% 30% at 15% 20%,var(--blob1),transparent 70%),
+    radial-gradient(45% 35% at 90% 55%,var(--blob2),transparent 70%),
+    radial-gradient(50% 30% at 20% 90%,var(--blob1),transparent 70%),
+    linear-gradient(180deg,var(--sky1),var(--sky2));
+  background-attachment:fixed;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{word-break:keep-all;overflow-wrap:break-word;line-break:strict}
+#app p,.small,.note,.sub,.cat .en,.tile span span{text-wrap:pretty}
+.grp{display:inline-flex;align-items:flex-end;gap:6px;max-width:100%}
+.answer .en{text-wrap:balance}
+.chipbtn,.way .wh .small,.seg button,.pill,.step .right span{white-space:nowrap;flex-shrink:0}
+.ways .w span{white-space:nowrap}
+.cat .nm{align-items:flex-start}.cat .nm i{margin-top:7px;flex-shrink:0}
+.tile{text-align:left}
+@media (max-width:400px){.tile{flex-direction:column;align-items:flex-start;gap:6px}}
+.wrap{max-width:440px;margin:0 auto;padding-block:16px 0;display:flex;flex-direction:column;gap:14px;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.en{font-family:var(--f-en)}
+.glass{background:var(--glass);border:1px solid var(--glass-line);border-radius:22px;box-shadow:var(--shadow);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:40px;height:40px;border-radius:11px;background:var(--cta);display:flex;align-items:flex-end;justify-content:center;gap:3px;padding:9px 8px}
+.logo i{width:5px;border-radius:2px;background:var(--cta-ink)}
+.logo i:nth-child(1){height:10px}.logo i:nth-child(2){height:15px;background:var(--mark)}.logo i:nth-child(3){height:20px;background:#ffd448}
+.brand b{font-weight:900;font-size:21px;letter-spacing:.02em}
+.round{width:40px;height:40px;border-radius:50%;border:1px solid var(--glass-line);background:var(--glass);display:grid;place-items:center;box-shadow:var(--shadow)}
+.round svg{width:18px;height:18px}
+.top.bar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px}
+.top.bar .navt{min-width:0;line-height:1.3;overflow-wrap:anywhere}
+.top.bar .navt small{display:block;margin:0}
+.top.bar>:last-child{justify-self:end}
+.navl{display:flex;gap:6px;align-items:center;justify-self:start}
+.homebtn{display:inline-flex;align-items:center;gap:5px;height:40px;padding:0 14px 0 11px;border-radius:999px;font-size:13px;font-weight:700;justify-self:start}
+.homebtn svg{width:17px;height:17px}
+.navt{text-align:center;font-weight:700;font-size:15px}
+.navt small{color:var(--muted);font-weight:500;margin-left:6px;font-variant-numeric:tabular-nums}
+
+/* 5 ways strip */
+.ways{padding:12px;display:flex;flex-direction:column;gap:8px;text-align:left;width:100%}
+.ways .head{display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--muted)}
+.ways .row5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.ways .w{background:var(--glass-strong);border-radius:12px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:5px}
+.ways .w i{display:block;height:4px;width:70%;border-radius:2px;background:var(--c)}
+.ways .w span{font-size:10.5px;font-weight:700;line-height:1.2;text-align:center}
+
+/* staircase */
+.stairs{display:flex;flex-direction:column;gap:10px;padding:6px 0}
+.step{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:left;padding:10px 14px;border-radius:18px;
+  width:calc(100% - var(--off));margin-left:var(--off);min-height:64px}
+.step .num{display:flex;align-items:baseline;gap:6px}
+.step .num b{font-family:var(--f-display);font-weight:400;font-size:26px;line-height:1}
+.step .num span{font-weight:700;font-size:13px}
+.step .sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.step .bar{display:flex;gap:3px;margin-top:6px;flex-wrap:wrap;max-width:190px}
+.step .bar i{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.step .bar i.ok{background:var(--accent)}.step .bar i.hint{background:var(--hint)}.step .bar i.ng{background:var(--ng)}
+.step .right{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.pill{font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;background:var(--accent);color:#fff}
+.step.cur{background:var(--glass-strong);border:1.5px solid var(--accent)}
+.step.lock{opacity:.6}
+.lockico{width:26px;height:26px;border-radius:50%;background:var(--line);display:grid;place-items:center}
+.lockico svg{width:13px;height:13px}
+
+/* CTA */
+.cta{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--cta);color:var(--cta-ink);border:0;border-radius:20px;padding:14px 16px;box-shadow:var(--shadow)}
+.cta .playc{width:44px;height:44px;border-radius:50%;background:#ffd448;color:#161a2e;display:grid;place-items:center;flex-shrink:0}
+.cta .playc svg{width:18px;height:18px}
+.cta .t{flex:1;min-width:0}
+.cta .t b{display:block;font-size:19px;font-weight:900}
+.cta .t span{display:block;font-size:12px;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{display:flex;align-items:center;gap:10px;text-align:left;padding:12px;border-radius:18px}
+.tile .ic{width:34px;height:34px;border-radius:10px;background:var(--glass-strong);display:grid;place-items:center;flex-shrink:0}
+.tile .ic svg{width:18px;height:18px}
+.tile b{display:block;font-size:13.5px}
+.tile span{display:block;font-size:11px;color:var(--muted);line-height:1.3}
+.foot{color:var(--muted);font-size:11.5px;text-align:center;padding-bottom:24px}
+
+/* practice */
+.tabs{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:16px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:12px;font-size:10.5px;font-weight:700;color:var(--faint)}
+.tab i{width:17px;height:17px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:10px;background:var(--line);color:var(--muted)}
+.tab.done{color:var(--muted)}.tab.done i{background:var(--accent-soft);color:var(--accent)}
+.tab.cur{background:var(--glass-strong);color:var(--ink);box-shadow:0 2px 8px rgba(40,50,120,.08)}
+.tab.cur i{background:#ffd448;color:#161a2e}
+.qhead{text-align:center;display:flex;flex-direction:column;gap:2px}
+.qhead h2{margin:0;font-size:20px;font-weight:900;text-wrap:balance;line-height:1.4}
+.qhead p{margin:0;font-size:12.5px;color:var(--muted)}
+.stage{padding:18px 16px;display:flex;flex-direction:column;gap:16px;min-height:330px}
+.jpq{font-size:17px;font-weight:700;text-align:center;line-height:1.55;text-wrap:balance;padding-bottom:12px;border-bottom:1px dashed var(--line)}
+.sent{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 6px;align-items:flex-end;min-height:52px}
+.chunk{display:inline-flex;flex-direction:column;gap:1px;align-items:flex-start}
+.chunk .tag{font-size:10px;font-weight:700;letter-spacing:.04em;color:var(--c)}
+.chunk .txt{font-family:var(--f-en);font-size:19px;font-weight:600;padding:1px 6px 2px;border-radius:8px;background:var(--glass-strong);box-shadow:inset 0 -3px 0 var(--c)}
+.chunk.new .txt{background:var(--mark);animation:pop .45s ease-out both}
+.chunk.jp .txt{font-family:var(--f-body);font-size:14px}
+.chunk.ghost .txt{color:var(--muted);background:transparent;box-shadow:inset 0 0 0 1.5px var(--line)}
+.plus{font-family:var(--f-en);color:var(--faint);font-size:16px;padding-bottom:4px}
+@keyframes pop{0%{transform:scale(.85);opacity:.3}100%{transform:none;opacity:1}}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{text-align:left;border:1.5px solid var(--line);background:var(--glass-strong);border-radius:14px;padding:12px 14px;font-size:15.5px;font-weight:500}
+.opt.right{border-color:var(--ok);box-shadow:inset 0 0 0 1px var(--ok)}
+.opt.wrong{border-color:var(--ng);opacity:.6}
+.note{border-radius:12px;padding:9px 12px;background:var(--glass-strong);font-size:13.5px;text-align:left}
+.note.ok{box-shadow:inset 3px 0 0 var(--ok)}.note.ng{box-shadow:inset 3px 0 0 var(--ng)}.note.hi{box-shadow:inset 3px 0 0 var(--hint)}
+.micwrap{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:auto}
+.micbtn{width:88px;height:88px;border-radius:50%;border:4px solid rgba(255,212,72,.45);background:#ffd448;color:#161a2e;display:grid;place-items:center;box-shadow:0 8px 24px rgba(255,180,40,.35)}
+.micbtn svg{width:32px;height:32px}
+.micbtn.listening{animation:pulse 1.2s ease-in-out infinite}
+.micbtn small{display:block;font-size:10px;font-weight:700;margin-top:-2px}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,200,60,.55)}50%{box-shadow:0 0 0 16px transparent}}
+@media (prefers-reduced-motion:reduce){.micbtn.listening{animation:none;outline:4px solid var(--accent)}.chunk.new .txt{animation:none}}
+.heard{font-family:var(--f-en);font-size:14px;color:var(--muted);text-align:center;min-height:1.4em}
+.answer{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:auto}
+.answer .en{font-size:18px;font-weight:600;text-align:center}
+.play{border:1px solid var(--line);background:var(--glass-strong);border-radius:999px;padding:6px 14px;font-size:13px;display:inline-flex;gap:6px;align-items:center;font-weight:700}
+.play svg{width:14px;height:14px}
+.seg{display:inline-flex;align-self:center;padding:3px;border-radius:999px;gap:2px}
+.seg button{border:0;background:transparent;padding:6px 16px;border-radius:999px;font-size:12.5px;font-weight:700;color:var(--muted)}
+.seg button.on{background:var(--glass-strong);color:var(--ink);box-shadow:0 2px 6px rgba(40,50,120,.1)}
+.subacts{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.chipbtn{border:1px solid var(--glass-line);background:var(--glass);border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:700}
+.ghost{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:12.5px;padding:2px}
+.dock{position:sticky;bottom:0;margin-top:auto;padding-block:10px calc(14px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;
+  background:linear-gradient(to top,var(--sky2) 60%,transparent)}
+.big{flex:1;background:var(--cta);color:var(--cta-ink);border:0;border-radius:16px;padding:15px;font-weight:900;font-size:16px}
+.big:disabled{opacity:.35;cursor:default}
+.big.lite{background:var(--glass-strong);color:var(--ink);border:1px solid var(--line)}
+.banner{font-size:12.5px;border-radius:12px;padding:8px 12px;color:var(--muted);background:var(--glass)}
+
+/* lists / record / library */
+.panel{padding:16px;display:flex;flex-direction:column;gap:12px}
+.panel h2{margin:0;font-size:16px;font-weight:900}
+.cats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cat{border:1px solid var(--glass-line);background:var(--glass-strong);border-radius:14px;padding:10px 12px;text-align:left;display:flex;flex-direction:column;gap:4px}
+.cat .nm{font-weight:700;font-size:14px;display:flex;gap:6px;align-items:center}
+.cat .nm i{width:9px;height:9px;border-radius:3px;background:var(--c)}
+.cat .en{font-size:11.5px;color:var(--muted)}
+.marks{display:flex;gap:3px;flex-wrap:wrap}
+.marks i{width:10px;height:10px;border-radius:3px;background:var(--line)}
+.marks i.ok{background:var(--accent)}.marks i.hint{background:var(--hint)}.marks i.ng{background:var(--ng)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{display:flex;flex-direction:column;align-items:center;gap:0;padding:12px 6px;border-radius:16px;background:var(--glass-strong)}
+.stat b{font-family:var(--f-en);font-size:24px;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--muted);text-align:center;line-height:1.3}
+.days{display:grid;grid-template-columns:repeat(14,1fr);gap:4px}
+.days i{aspect-ratio:1;border-radius:4px;background:var(--line);max-width:100%}
+.days i.d1{background:var(--accent-soft)}.days i.d2{background:var(--accent)}
+.li{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);align-items:center;font-size:14px}
+.li:first-of-type{border-top:0}
+.li .q{min-width:0}
+.chip{font-size:11px;border-radius:999px;padding:2px 9px;font-weight:700;border:1px solid currentColor;flex-shrink:0}
+.chip.ok{color:var(--accent)}.chip.hint{color:var(--hint)}.chip.ng{color:var(--ng)}
+.small{font-size:12.5px;color:var(--muted);margin:0}
+.way{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:18px;background:var(--glass-strong);border-left:5px solid var(--c)}
+.way .wh{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.way .wh b{font-size:15px}
+.way .ex{display:flex;flex-wrap:wrap;gap:8px 6px;align-items:flex-end}
+.method{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 8px 8px 16px;border-radius:18px;font-size:13px;font-weight:700;color:var(--muted)}
+.method .seg{padding:3px;background:var(--line)}
+.method .seg button{display:inline-flex;align-items:center;gap:5px;padding:7px 12px}
+.method .seg svg{width:15px;height:15px}
+.choose{display:flex;flex-direction:column;gap:10px;margin-top:auto}
+.pickm{display:flex;gap:12px;align-items:center;text-align:left;padding:14px;border-radius:16px;border:1.5px solid var(--line);background:var(--glass-strong)}
+.pickm.last{border-color:var(--accent)}
+.pickm .ic{width:46px;height:46px;border-radius:50%;background:#ffd448;color:#161a2e;display:grid;place-items:center;flex-shrink:0}
+.pickm .ic svg{width:22px;height:22px}
+.pickm b{display:block;font-size:16px}
+.pickm span span{display:block;font-size:12px;color:var(--muted);line-height:1.45}
+.typewrap{display:flex;flex-direction:column;gap:6px;margin-top:auto}
+.typewrap input{width:100%;box-sizing:border-box;font-size:18px;padding:12px 14px;border-radius:14px;border:1.5px solid var(--line);background:var(--glass-strong);color:var(--ink)}
+.typewrap input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.setting{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+</style>
+
+<style>*,*::before,*::after{box-sizing:border-box}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ============ 問題データ ============
+   t: 足す情報の種類 / jp: 日本語 / en: 英語のまとまり / alt: 別解 */
+const TYPES={
+  core:{l:"結論",c:"--t-core"}, place:{l:"どこで",c:"--t-place"}, time:{l:"いつ",c:"--t-time"},
+  with:{l:"誰と",c:"--t-with"}, by:{l:"何で",c:"--t-by"}, for:{l:"どのくらい",c:"--t-for"},
+  purpose:{l:"何のために",c:"--t-purpose"}, desc:{l:"どんな",c:"--t-desc"},
+  reason:{l:"なぜ",c:"--t-reason"}, cond:{l:"どんなとき",c:"--t-cond"},
+  and:{l:"そして",c:"--t-by"}, but:{l:"でも",c:"--t-for"}, so:{l:"だから",c:"--t-time"},
+  because:{l:"なぜなら",c:"--t-reason"}, when:{l:"〜とき",c:"--t-cond"}, if:{l:"もし",c:"--t-cond"},
+  that:{l:"どんな（that）",c:"--t-desc"}, who:{l:"どんな人（who）",c:"--t-desc"},
+  about:{l:"〜について",c:"--t-with"}, from:{l:"〜から",c:"--t-place"}, to:{l:"〜に（相手）",c:"--t-by"},
+  before:{l:"〜の前に",c:"--t-time"}, after:{l:"〜の後に",c:"--t-time"}, until:{l:"〜まで",c:"--t-for"}, without:{l:"〜なしで",c:"--t-purpose"},
+  prep:{l:"前置詞",c:"--t-with"}, mix:{l:"総合",c:"--t-core"}, mix2:{l:"まとめ",c:"--t-core"}, mix3:{l:"まとめ",c:"--t-core"}, mix4:{l:"まとめ",c:"--t-core"}
+};
+const COMMA=new Set(["and","but","so"]);
+const CATS={
+  2:[{k:"place",name:"どこで",en:"at the hotel"},{k:"time",name:"いつ",en:"this morning"},{k:"with",name:"誰と（with）",en:"with my daughter"},
+     {k:"by",name:"何で（by）",en:"by train"},{k:"for",name:"どのくらい（for）",en:"for three days"},{k:"purpose",name:"何のために（to）",en:"to meet a friend"},
+     {k:"prep",name:"前置詞いろいろ",en:"about / from / to / before / after / until"},
+     {k:"mix2",name:"まとめ問題",en:"ステップ2の足し方を組み合わせる"}],
+  3:[{k:"and",name:"and（そして）",en:"and I drank some coffee"},{k:"but",name:"but（でも）",en:"but it's a little big"},{k:"so",name:"so（だから）",en:"so I'll take a break"},
+     {k:"because",name:"because（なぜなら）",en:"because I like traveling"},{k:"when",name:"when（〜とき）",en:"when I speak English"},{k:"if",name:"if（もし）",en:"if you have time"},{k:"mix3",name:"まとめ問題",en:"接続詞＋ステップ2の足し方"}],
+  4:[{k:"that",name:"that（物の説明）",en:"that I tried on"},{k:"who",name:"who（人の説明）",en:"who loves traveling"},{k:"mix4",name:"まとめ問題",en:"that・who＋接続詞など"}],
+  5:[{k:"mix",name:"総合問題",en:"ここまでの全部"}]
+};
+const S=(id,lv,cat,jp,coreJp,core,alt,words,adds)=>({id,lv,cat,jp,coreJp,core,alt:alt||[],words:words||[],adds});
+const A=(t,jp,en,alt)=>({t,jp,en,alt:alt||[]});
+const SETS=[
+/* ---- レベル1：中心を選ぶ→英語にする ---- */
+S("1-01",1,"core","今朝、ホテルで朝ごはんを食べました。","私は朝ごはんを食べました。","I had breakfast.",["I ate breakfast."],["朝ごはん = breakfast","食べた = had"],[A("place","ホテルで"),A("time","今朝")]),
+S("1-02",1,"core","今、駅で娘を待っています。","私は娘を待っています。","I'm waiting for my daughter.",[],["娘 = my daughter","〜を待っている = waiting for"],[A("place","駅で"),A("time","今")]),
+S("1-03",1,"core","試着したシャツを買いたいです。","シャツを買いたいです。","I'd like to buy the shirt.",["I want to buy the shirt."],["〜したいです = I'd like to","買う = buy"],[A("desc","私が試着した")]),
+S("1-04",1,"core","旅行が大好きな友達がいます。","友達がいます。","I have a friend.",[],["友達がいる = have a friend"],[A("desc","旅行が大好きな")]),
+S("1-05",1,"core","虫がいたので、部屋を変えたいです。","部屋を変えたいです。","I'd like to change my room.",["I want to change my room."],["変える = change","私の部屋 = my room"],[A("reason","虫がいたから")]),
+S("1-06",1,"core","ホテルに着いたら、電話するね。","電話するね。","I'll call you.",["I will call you."],["電話する = call"],[A("cond","ホテルに着いたら")]),
+S("1-07",1,"core","英語のメニューがあるレストランを探しています。","レストランを探しています。","I'm looking for a restaurant.",[],["〜を探している = looking for"],[A("desc","英語のメニューがある")]),
+S("1-08",1,"core","毎日、家で英語を勉強しています。","英語を勉強しています。","I study English.",["I'm studying English.","I'm learning English.","I learn English."],["勉強する = study"],[A("place","家で"),A("time","毎日")]),
+S("1-09",1,"core","昨日、娘と映画を見ました。","映画を見ました。","I watched a movie.",["I saw a movie."],["映画を見た = watched a movie"],[A("with","娘と"),A("time","昨日")]),
+S("1-10",1,"core","日本語を勉強している友達がいます。","友達がいます。","I have a friend.",[],["友達がいる = have a friend"],[A("desc","日本語を勉強している")]),
+S("1-11",1,"core","駅の近くのカフェでコーヒーを飲みました。","コーヒーを飲みました。","I had coffee.",["I drank coffee.","I had some coffee.","I drank some coffee."],["コーヒーを飲んだ = had coffee"],[A("place","駅の近くのカフェで")]),
+S("1-12",1,"core","これが昨日買ったバッグです。","これがバッグです。","This is the bag.",[],["これが〜です = This is"],[A("desc","昨日買った")]),
+S("1-13",1,"core","来週、友達と京都に行きます。","京都に行きます。","I'm going to Kyoto.",["I'll go to Kyoto.","I will go to Kyoto."],["京都に行く = go to Kyoto"],[A("with","友達と"),A("time","来週")]),
+S("1-14",1,"core","英語を話すとき、緊張してしまいます。","緊張してしまいます。","I get nervous.",[],["緊張する = get nervous"],[A("cond","英語を話すとき")]),
+S("1-15",1,"core","雨が降っていたので、家にいました。","家にいました。","I stayed home.",["I stayed at home."],["家にいた = stayed home"],[A("reason","雨が降っていたから")]),
+S("1-16",1,"core","母に送るために、写真を撮りました。","写真を撮りました。","I took a picture.",["I took a photo.","I took pictures.","I took photos."],["写真を撮った = took a picture"],[A("purpose","母に送るために")]),
+S("1-17",1,"core","時間があったら、一緒にランチを食べよう。","一緒にランチを食べよう。","Let's have lunch together.",["Let's eat lunch together."],["〜しよう = Let's","ランチを食べる = have lunch"],[A("cond","時間があったら")]),
+S("1-18",1,"core","バスで空港に行きました。","空港に行きました。","I went to the airport.",[],["行った = went"],[A("by","バスで")]),
+S("1-19",1,"core","3日間このホテルに泊まります。","このホテルに泊まります。","I'm staying at this hotel.",["I'll stay at this hotel.","I will stay at this hotel."],["泊まる = stay at"],[A("for","3日間")]),
+S("1-20",1,"core","日本に来る人たちを助けたいです。","人たちを助けたいです。","I want to help people.",["I'd like to help people."],["助ける = help"],[A("desc","日本に来る")]),
+/* ---- レベル2：中心→英語→後ろに足す ---- */
+S("2-p1",2,"place","今朝、ホテルで朝ごはんを食べました。","私は朝ごはんを食べました。","I had breakfast.",["I ate breakfast."],["朝ごはん = breakfast","食べた = had"],[A("place","ホテルで","at the hotel"),A("time","今朝","this morning")]),
+S("2-p2",2,"place","今、駅で娘を待っています。","私は娘を待っています。","I'm waiting for my daughter.",[],["娘 = my daughter","〜を待っている = waiting for"],[A("place","駅で","at the station"),A("time","今","now")]),
+S("2-p3",2,"place","昨日、このお店でバッグを買いました。","バッグを買いました。","I bought a bag.",[],["買った = bought"],[A("place","このお店で","at this store",["at this shop"]),A("time","昨日","yesterday")]),
+S("2-p4",2,"place","駅の近くのカフェでコーヒーを飲みました。","コーヒーを飲みました。","I had coffee.",["I drank coffee.","I had some coffee."],["コーヒーを飲んだ = had coffee"],[A("place","駅の近くのカフェで","at a cafe near the station")]),
+S("2-p5",2,"place","空港でお土産を買いました。","お土産を買いました。","I bought some gifts.",["I bought gifts.","I bought souvenirs.","I bought some souvenirs."],["お土産 = gifts / souvenirs","買った = bought"],[A("place","空港で","at the airport")]),
+S("2-t1",2,"time","毎朝、コーヒーを飲みます。","コーヒーを飲みます。","I drink coffee.",["I have coffee."],["飲む = drink"],[A("time","毎朝","every morning")]),
+S("2-t2",2,"time","先週、京都に行きました。","京都に行きました。","I went to Kyoto.",[],["行った = went"],[A("time","先週","last week")]),
+S("2-t3",2,"time","明日、友達に会います。","友達に会います。","I'm meeting a friend.",["I'll meet a friend.","I will meet a friend.","I'm going to meet a friend.","I'm seeing a friend."],["会う = meet"],[A("time","明日","tomorrow")]),
+S("2-t4",2,"time","毎日、家で英語を勉強しています。","英語を勉強しています。","I study English.",["I'm studying English.","I'm learning English."],["勉強する = study"],[A("place","家で","at home"),A("time","毎日","every day")]),
+S("2-t5",2,"time","昨日の夜、ホテルで映画を見ました。","映画を見ました。","I watched a movie.",["I saw a movie."],["映画を見た = watched a movie"],[A("place","ホテルで","at the hotel"),A("time","昨日の夜","last night")]),
+S("2-w1",2,"with","娘と一緒に旅行しています。","旅行しています。","I'm traveling.",[],["旅行している = traveling"],[A("with","娘と","with my daughter")]),
+S("2-w2",2,"with","友達とランチを食べました。","ランチを食べました。","I had lunch.",["I ate lunch."],["ランチを食べた = had lunch"],[A("with","友達と","with a friend",["with my friend"])]),
+S("2-w3",2,"with","昨日、家族と買い物に行きました。","買い物に行きました。","I went shopping.",[],["買い物に行く = go shopping"],[A("with","家族と","with my family"),A("time","昨日","yesterday")]),
+S("2-w4",2,"with","週末、友達とテニスをしました。","テニスをしました。","I played tennis.",[],["テニスをする = play tennis"],[A("with","友達と","with a friend",["with my friend","with friends"]),A("time","週末","on the weekend",["last weekend"])]),
+S("2-w5",2,"with","今朝、友達とカフェでコーヒーを飲みました。","コーヒーを飲みました。","I had coffee.",["I drank coffee.","I had some coffee."],["コーヒーを飲んだ = had coffee"],[A("with","友達と","with a friend",["with my friend"]),A("place","カフェで","at the cafe",["at a cafe"]),A("time","今朝","this morning")]),
+S("2-b1",2,"by","電車で空港に行きました。","空港に行きました。","I went to the airport.",[],["行った = went"],[A("by","電車で","by train")]),
+S("2-b2",2,"by","バスでホテルに戻りました。","ホテルに戻りました。","I went back to the hotel.",["I came back to the hotel.","I returned to the hotel."],["戻る = go back"],[A("by","バスで","by bus")]),
+S("2-b3",2,"by","毎日、自転車で駅に行きます。","駅に行きます。","I go to the station.",[],["行く = go"],[A("by","自転車で","by bike",["by bicycle"]),A("time","毎日","every day")]),
+S("2-b4",2,"by","タクシーで駅に行きましょう。","駅に行きましょう。","Let's go to the station.",[],["〜しよう = Let's"],[A("by","タクシーで","by taxi")]),
+S("2-b5",2,"by","毎日、車で会社に行きます。","会社に行きます。","I go to work.",["I go to the office.","I go to my office."],["会社に行く = go to work"],[A("by","車で","by car"),A("time","毎日","every day")]),
+S("2-f1",2,"for","このホテルに3日間泊まります。","このホテルに泊まります。","I'm staying at this hotel.",["I'll stay at this hotel.","I will stay at this hotel."],["泊まる = stay at"],[A("for","3日間","for three days")]),
+S("2-f2",2,"for","駅で30分待ちました。","待ちました。","I waited.",[],["待った = waited"],[A("place","駅で","at the station"),A("for","30分","for thirty minutes")]),
+S("2-f3",2,"for","1週間、日本に滞在します。","日本に滞在します。","I'm staying in Japan.",["I'll stay in Japan.","I will stay in Japan."],["滞在する = stay"],[A("for","1週間","for a week",["for one week"])]),
+S("2-f4",2,"for","2年間、英語を勉強しました。","英語を勉強しました。","I studied English.",["I learned English."],["勉強した = studied"],[A("for","2年間","for two years")]),
+S("2-f5",2,"for","カフェで1時間勉強しました。","勉強しました。","I studied.",[],["勉強した = studied"],[A("place","カフェで","at a cafe",["at the cafe"]),A("for","1時間","for an hour",["for one hour"])]),
+S("2-o1",2,"purpose","友達に会うために、そのカフェに行きました。","そのカフェに行きました。","I went to the cafe.",[],["行った = went"],[A("purpose","友達に会うために","to meet a friend",["to see a friend","to meet my friend"])]),
+S("2-o2",2,"purpose","お土産を買うために、このお店に来ました。","このお店に来ました。","I came to this store.",["I came to this shop."],["来た = came"],[A("purpose","お土産を買うために","to buy some gifts",["to buy gifts","to buy souvenirs","to buy some souvenirs"])]),
+S("2-o3",2,"purpose","英語を練習するために、この動画を見ています。","この動画を見ています。","I'm watching this video.",[],["見ている = watching"],[A("purpose","英語を練習するために","to practice English")]),
+S("2-o4",2,"purpose","来月、娘に会うためにカナダに行きます。","カナダに行きます。","I'm going to Canada.",["I'll go to Canada.","I will go to Canada."],["行く = go"],[A("time","来月","next month"),A("purpose","娘に会うために","to see my daughter",["to meet my daughter","to visit my daughter"])]),
+S("2-o5",2,"purpose","写真を撮るために、早く起きました。","早く起きました。","I got up early.",["I woke up early."],["起きた = got up","早く = early"],[A("purpose","写真を撮るために","to take pictures",["to take photos","to take some pictures"])]),
+S("2-x1",2,"prep","友達と旅行について話しました。","友達と話しました。","I talked with my friend.",["I talked to my friend.","I spoke with my friend.","I talked with a friend."],["話した = talked"],[A("about","旅行について","about our trip",["about the trip","about my trip"])]),
+S("2-x2",2,"prep","日本の文化についての本を読んでいます。","本を読んでいます。","I'm reading a book.",[],["読んでいる = reading"],[A("about","日本の文化についての","about Japanese culture")]),
+S("2-x3",2,"prep","友達から手紙をもらいました。","手紙をもらいました。","I got a letter.",["I received a letter."],["もらった = got"],[A("from","友達から","from a friend",["from my friend"])]),
+S("2-x4",2,"prep","9時から5時まで働きます。","働きます。","I work.",[],["働く = work"],[A("from","9時から","from nine"),A("until","5時まで","to five",["until five","till five"])]),
+S("2-x5",2,"prep","母にメッセージを送りました。","メッセージを送りました。","I sent a message.",[],["送った = sent"],[A("to","母に","to my mother",["to my mom"])]),
+S("2-x6",2,"prep","寝る前に本を読みます。","本を読みます。","I read a book.",["I read books."],["読む = read"],[A("before","寝る前に","before bed",["before I go to bed","before going to bed","before sleeping"])]),
+S("2-x7",2,"prep","仕事の後にジムに行きました。","ジムに行きました。","I went to the gym.",[],["行った = went"],[A("after","仕事の後に","after work")]),
+S("2-x8",2,"prep","夕方まで公園にいました。","公園にいました。","I was at the park.",["I stayed at the park.","I was in the park.","I stayed in the park."],["いた = was"],[A("until","夕方まで","until the evening",["until evening","till evening","till the evening"])]),
+S("2-x9",2,"prep","机の上に鍵を置きました。","鍵を置きました。","I put my keys.",["I put the keys.","I put my key.","I left my keys."],["置いた = put","鍵 = keys"],[A("place","机の上に","on the desk",["on the table"])]),
+S("2-x10",2,"prep","砂糖なしでコーヒーを飲みます。","コーヒーを飲みます。","I drink coffee.",["I have coffee."],["飲む = drink"],[A("without","砂糖なしで","without sugar")]),
+S("2-m1",2,"mix2","昨日、娘と電車で京都に行きました。","京都に行きました。","I went to Kyoto.",[],["行った = went"],[A("with","娘と","with my daughter"),A("by","電車で","by train"),A("time","昨日","yesterday")]),
+S("2-m2",2,"mix2","今朝、友達に会うために、娘とそのカフェに行きました。","そのカフェに行きました。","I went to the cafe.",[],["行った = went"],[A("with","娘と","with my daughter"),A("time","今朝","this morning"),A("purpose","友達に会うために","to meet a friend",["to see a friend","to meet my friend"])]),
+S("2-m3",2,"mix2","寝る前に、家で1時間英語を勉強します。","英語を勉強します。","I study English.",["I learn English."],["勉強する = study"],[A("place","家で","at home"),A("for","1時間","for an hour",["for one hour"]),A("before","寝る前に","before bed",["before I go to bed","before going to bed"])]),
+S("2-m4",2,"mix2","先週、家族とホテルに3日間泊まりました。","ホテルに泊まりました。","I stayed at a hotel.",["I stayed at the hotel."],["泊まった = stayed at"],[A("with","家族と","with my family"),A("for","3日間","for three days"),A("time","先週","last week")]),
+S("2-m5",2,"mix2","仕事の後に、同僚とカフェでコーヒーを飲みました。","コーヒーを飲みました。","I had coffee.",["I drank coffee.","I had some coffee."],["コーヒーを飲んだ = had coffee"],[A("with","同僚と","with a coworker",["with a colleague","with my coworker","with my colleague"]),A("place","カフェで","at a cafe",["at the cafe"]),A("after","仕事の後に","after work")]),
+/* ---- レベル3：接続詞で話をつなぐ ---- */
+S("3-a1",3,"and","朝ごはんを食べて、コーヒーも飲みました。","朝ごはんを食べました。","I had breakfast.",["I ate breakfast."],["朝ごはん = breakfast","食べた = had"],[A("and","コーヒーも飲んだ","and I drank some coffee",["and I had some coffee","and I drank coffee","and I had coffee"])]),
+S("3-a2",3,"and","日本から来ていて、娘と旅行しています。","日本から来ました。","I'm from Japan.",["I am from Japan."],["〜から来た = I'm from"],[A("and","娘と旅行している","and I'm traveling with my daughter")]),
+S("3-a3",3,"and","コーヒーがおいしかったです。また来たいです。","コーヒーがおいしかったです。","The coffee was great.",["The coffee was good.","The coffee was delicious."],["おいしかった = was great"],[A("and","また来たい","and I want to come back",["and I'd like to come back"])]),
+S("3-a4",3,"and","友達と旅行していて、私たちは買い物が大好きです。","友達と旅行しています。","I'm traveling with a friend.",["I'm traveling with my friend."],["旅行している = traveling"],[A("and","私たちは買い物が大好き","and we love shopping")]),
+S("3-b1",3,"but","そのシャツは気に入ったんですが、少し大きいです。","そのシャツが気に入っています。","I like the shirt.",[],["気に入っている = like"],[A("but","少し大きい","but it's a little big",["but it's a bit big","but it is a little big"])]),
+S("3-b2",3,"but","英語は読めますが、うまく話せません。","英語は読めます。","I can read English.",[],["読める = can read"],[A("but","うまく話せない","but I can't speak it well",["but I can't speak well","but I cannot speak it well"])]),
+S("3-b3",3,"but","英語で話したいのですが、緊張してしまいます。","英語で話したいです。","I want to speak English.",["I'd like to speak English."],["話したい = want to speak"],[A("but","緊張してしまう","but I get nervous")]),
+S("3-b4",3,"but","友達は英語を話せますが、自分でやってみたいです。","友達は英語を話せます。","My friend speaks English.",["My friend can speak English."],["友達 = my friend","話す = speaks"],[A("but","自分でやってみたい","but I want to try it myself",["but I'd like to try it myself"])]),
+S("3-s1",3,"so","疲れているので、少し休憩します。","疲れています。","I'm tired.",["I am tired."],["疲れている = tired"],[A("so","少し休憩する","so I'll take a break",["so I will take a break","so I'm going to take a break"])]),
+S("3-s2",3,"so","私も駅に行くので、一緒に行けますよ。","私も駅に行きます。","I'm going to the station too.",[],["駅に行く = go to the station","〜も = too"],[A("so","一緒に行ける","so we can go together")]),
+S("3-s3",3,"so","タクシーがまだ来ていないので、ホテルのスタッフに聞きました。","タクシーがまだ来ていません。","The taxi isn't here yet.",["The taxi hasn't come yet."],["まだ = yet","ここにいない = isn't here"],[A("so","ホテルのスタッフに聞いた","so I asked the hotel staff",["so I asked the staff at the hotel","so I asked the staff"])]),
+S("3-s4",3,"so","いろいろな人と話したいので、英語を勉強しています。","人と話したいです。","I want to talk to people.",["I'd like to talk to people."],["〜と話す = talk to"],[A("so","英語を勉強している","so I'm learning English",["so I'm studying English","so I study English"])]),
+S("3-c1",3,"because","旅行が好きなので、英語を勉強しています。","英語を勉強しています。","I'm learning English.",["I'm studying English.","I study English."],["勉強している = learning"],[A("because","旅行が好きだから","because I like traveling",["because I love traveling","because I like to travel"])]),
+S("3-c2",3,"because","虫がいたので、部屋を変えたいです。","部屋を変えたいです。","I'd like to change my room.",["I want to change my room."],["変える = change","私の部屋 = my room"],[A("because","虫がいたから","because there were bugs",["because there was a bug","because there were bugs in my room","because there was a bug in my room"])]),
+S("3-c3",3,"because","新しい人たちに出会えるので、旅行が好きです。","旅行が好きです。","I like traveling.",["I love traveling.","I like to travel."],["旅行 = traveling"],[A("because","新しい人に出会えるから","because I can meet new people")]),
+S("3-c4",3,"because","雨が降っていたので、家にいました。","家にいました。","I stayed home.",["I stayed at home."],["家にいた = stayed home"],[A("because","雨が降っていたから","because it was raining")]),
+S("3-w1",3,"when","英語を話すとき、緊張してしまいます。","緊張してしまいます。","I get nervous.",[],["緊張する = get nervous"],[A("when","英語を話すとき","when I speak English")]),
+S("3-w2",3,"when","相手に言いたいことが伝わると、うれしいです。","うれしいです。","I feel happy.",["I'm happy.","I am happy."],["うれしい = feel happy"],[A("when","相手が分かってくれたとき","when people understand me")]),
+S("3-w3",3,"when","日本に来たら、案内するね。","案内するね。","I'll show you around.",["I will show you around."],["案内する = show you around"],[A("when","日本に来たとき","when you come to Japan")]),
+S("3-w4",3,"when","ホテルに着いたら、電話するね。","電話するね。","I'll call you.",["I will call you."],["電話する = call"],[A("when","ホテルに着いたとき","when I get to the hotel",["when I arrive at the hotel"])]),
+S("3-i1",3,"if","時間があったら、一緒にコーヒーを飲もう。","一緒にコーヒーを飲もう。","Let's have coffee.",["Let's have coffee together.","Let's drink coffee."],["〜しよう = Let's","コーヒーを飲む = have coffee"],[A("if","時間があったら","if you have time")]),
+S("3-i2",3,"if","困ったら、言ってくださいね。","言ってくださいね。","Let me know.",[],["知らせて = Let me know"],[A("if","助けが必要なら","if you need help")]),
+S("3-i3",3,"if","もし日本に来たら、案内するね。","案内するね。","I'll show you around.",["I will show you around."],["案内する = show you around"],[A("if","もし日本に来たら","if you come to Japan")]),
+S("3-i4",3,"if","雨が降ったら、家にいます。","家にいます。","I'll stay home.",["I will stay home.","I'll stay at home."],["家にいる = stay home"],[A("if","雨が降ったら","if it rains")]),
+S("3-m1",3,"mix3","雨が降っていたので、昨日は家にいました。","家にいました。","I stayed home.",["I stayed at home."],["家にいた = stayed home"],[A("time","昨日","yesterday"),A("because","雨が降っていたから","because it was raining")]),
+S("3-m2",3,"mix3","時間があったら、明日一緒にランチを食べよう。","一緒にランチを食べよう。","Let's have lunch together.",["Let's eat lunch together."],["〜しよう = Let's","ランチを食べる = have lunch"],[A("time","明日","tomorrow"),A("if","時間があったら","if you have time")]),
+S("3-m3",3,"mix3","英語を話すとき緊張しますが、楽しいです。","緊張してしまいます。","I get nervous.",[],["緊張する = get nervous"],[A("when","英語を話すとき","when I speak English"),A("but","楽しい","but I enjoy it",["but it's fun","but I like it"])]),
+S("3-m4",3,"mix3","疲れていたので、昨日の夜は家で映画を見ました。","映画を見ました。","I watched a movie.",["I saw a movie."],["映画を見た = watched a movie"],[A("place","家で","at home"),A("time","昨日の夜","last night"),A("because","疲れていたから","because I was tired")]),
+S("3-m5",3,"mix3","先週、京都に行きましたが、とても混んでいました。","京都に行きました。","I went to Kyoto.",[],["行った = went"],[A("time","先週","last week"),A("but","とても混んでいた","but it was very crowded",["but it was really crowded"])]),
+/* ---- レベル4前半：that / who ---- */
+S("4-t1",4,"that","試着したシャツを買いたいです。","シャツを買いたいです。","I'd like to buy the shirt.",["I want to buy the shirt."],["〜したいです = I'd like to","買う = buy"],[A("that","私が試着した","that I tried on")]),
+S("4-t2",4,"that","これが、昨日買ったバッグです。","これがバッグです。","This is the bag.",[],["これが〜です = This is"],[A("that","私が昨日買った","that I bought yesterday")]),
+S("4-t3",4,"that","英語のメニューがあるレストランを探しています。","レストランを探しています。","I'm looking for a restaurant.",[],["〜を探している = looking for"],[A("that","英語のメニューがある","that has an English menu")]),
+S("4-t4",4,"that","おいしいコーヒーがあるカフェを知っています。","カフェを知っています。","I know a cafe.",[],["知っている = know"],[A("that","おいしいコーヒーがある","that has good coffee",["that serves good coffee"])]),
+S("4-t5",4,"that","ホテルの近くにあるお店を探しています。","お店を探しています。","I'm looking for a store.",["I'm looking for a shop."],["〜を探している = looking for"],[A("that","ホテルの近くにある","that is near the hotel",["that's near the hotel"])]),
+S("4-t6",4,"that","母がくれた時計をなくしました。","時計をなくしました。","I lost the watch.",[],["なくした = lost","時計 = watch"],[A("that","母がくれた","that my mother gave me",["that my mom gave me"])]),
+S("4-t7",4,"that","友達がすすめてくれた本を読んでいます。","本を読んでいます。","I'm reading a book.",["I'm reading the book."],["読んでいる = reading"],[A("that","友達がすすめてくれた","that my friend recommended",["that a friend recommended"])]),
+S("4-t8",4,"that","ネットで見たバッグを買いたいです。","バッグを買いたいです。","I'd like to buy the bag.",["I want to buy the bag."],["〜したいです = I'd like to","買う = buy"],[A("that","ネットで見た","that I saw online")]),
+S("4-w1",4,"who","旅行が大好きな友達がいます。","友達がいます。","I have a friend.",[],["友達がいる = have a friend"],[A("who","旅行が大好きな","who loves traveling",["who loves to travel"])]),
+S("4-w2",4,"who","日本語を勉強している友達がいます。","友達がいます。","I have a friend.",[],["友達がいる = have a friend"],[A("who","日本語を勉強している","who is learning Japanese",["who's learning Japanese","who is studying Japanese","who studies Japanese"])]),
+S("4-w3",4,"who","日本に来る人たちを助けたいです。","人たちを助けたいです。","I want to help people.",["I'd like to help people."],["助ける = help"],[A("who","日本を訪れる","who visit Japan",["who come to Japan"])]),
+S("4-w4",4,"who","英語を話せる友達がいます。","友達がいます。","I have a friend.",[],["友達がいる = have a friend"],[A("who","英語を話せる","who speaks English",["who can speak English"])]),
+S("4-w5",4,"who","カナダに住んでいる友達がいます。","友達がいます。","I have a friend.",[],["友達がいる = have a friend"],[A("who","カナダに住んでいる","who lives in Canada")]),
+S("4-w6",4,"who","料理が上手な姉がいます。","姉がいます。","I have a sister.",["I have an older sister."],["姉 = sister"],[A("who","料理が上手な","who is good at cooking",["who's good at cooking","who cooks well"])]),
+S("4-w7",4,"who","英語を教えてくれる先生を探しています。","先生を探しています。","I'm looking for a teacher.",[],["〜を探している = looking for"],[A("who","英語を教えてくれる","who can teach me English",["who teaches English","who can teach English"])]),
+S("4-w8",4,"who","道を教えてくれた人にお礼を言いました。","その人にお礼を言いました。","I thanked the person.",["I thanked the man.","I thanked the woman."],["お礼を言った = thanked"],[A("who","道を教えてくれた","who showed me the way",["who told me the way"])]),
+S("4-x1",4,"mix4","カナダに住んでいる友達にメッセージを送りました。","メッセージを送りました。","I sent a message.",[],["送った = sent"],[A("to","友達に","to my friend",["to a friend"]),A("who","カナダに住んでいる","who lives in Canada")]),
+S("4-x2",4,"mix4","英語のメニューがあるレストランを探していますが、見つかりません。","レストランを探しています。","I'm looking for a restaurant.",[],["〜を探している = looking for"],[A("that","英語のメニューがある","that has an English menu"),A("but","見つからない","but I can't find one",["but I can't find it","but I cannot find one"])]),
+S("4-x3",4,"mix4","料理が上手な姉がいるので、よく一緒に料理します。","姉がいます。","I have a sister.",["I have an older sister."],["姉 = sister"],[A("who","料理が上手な","who is good at cooking",["who's good at cooking","who cooks well"]),A("so","よく一緒に料理する","so we often cook together")]),
+S("4-x4",4,"mix4","母がくれた時計をなくしたので、探しています。","時計をなくしました。","I lost the watch.",[],["なくした = lost","時計 = watch"],[A("that","母がくれた","that my mother gave me",["that my mom gave me"]),A("so","探している","so I'm looking for it")]),
+S("4-x5",4,"mix4","来年留学するので、英語を教えてくれる先生を探しています。","先生を探しています。","I'm looking for a teacher.",[],["〜を探している = looking for"],[A("who","英語を教えてくれる","who can teach me English",["who teaches English","who can teach English"]),A("because","来年留学するから","because I'm going to study abroad next year",["because I'll study abroad next year","because I will study abroad next year"])]),
+/* ---- ステップ5：総合問題 ---- */
+S("4-m1",5,"mix","今朝、ホテルで朝ごはんを食べて、コーヒーも飲みました。","朝ごはんを食べました。","I had breakfast.",["I ate breakfast."],["朝ごはん = breakfast","食べた = had"],[A("place","ホテルで","at the hotel"),A("time","今朝","this morning"),A("and","コーヒーも飲んだ","and I drank some coffee",["and I had some coffee","and I drank coffee"])]),
+S("4-m2",5,"mix","試着したシャツは気に入ったんですが、少し大きいです。","そのシャツが気に入っています。","I like the shirt.",[],["気に入っている = like"],[A("that","私が試着した","that I tried on"),A("but","少し大きい","but it's a little big",["but it's a bit big"])]),
+S("4-m3",5,"mix","疲れているので、少し休憩するためにカフェに行きます。","疲れています。","I'm tired.",["I am tired."],["疲れている = tired"],[A("so","カフェに行く","so I'll go to a cafe",["so I will go to a cafe","so I'm going to a cafe"]),A("purpose","休憩するために","to take a break")]),
+S("4-m4",5,"mix","娘と旅行するのが好きなので、毎日、家で英語を勉強しています。","英語を勉強しています。","I'm learning English.",["I'm studying English.","I study English."],["勉強している = learning"],[A("place","家で","at home"),A("time","毎日","every day"),A("because","旅行するのが好きだから","because I like traveling",["because I love traveling"]),A("with","娘と","with my daughter")]),
+S("4-m5",5,"mix","日本語が話せない人と英語で話すとき、緊張してしまいます。","緊張してしまいます。","I get nervous.",[],["緊張する = get nervous"],[A("when","英語で話すとき","when I speak English"),A("with","人と","with people"),A("who","日本語が話せない","who don't speak Japanese",["who can't speak Japanese"])]),
+S("4-m6",5,"mix","時間があったら、明日、駅の近くのカフェで一緒にコーヒーを飲もう。","一緒にコーヒーを飲もう。","Let's have coffee.",["Let's have coffee together."],["〜しよう = Let's"],[A("place","カフェで","at the cafe"),A("place","駅の近くの","near the station"),A("time","明日","tomorrow"),A("if","時間があったら","if you have time")]),
+S("4-m7",5,"mix","おいしいコーヒーがあるカフェを知っています。でも、ちょっと遠いです。","カフェを知っています。","I know a cafe.",[],["知っている = know"],[A("that","おいしいコーヒーがある","that has good coffee",["that serves good coffee"]),A("but","ちょっと遠い","but it's a little far",["but it's a bit far"])]),
+S("4-m8",5,"mix","昨日、日本語を勉強している友達に会うために、娘とそのカフェに行き、一緒に昼ごはんを食べました。","そのカフェに行きました。","I went to the cafe.",[],["行った = went"],[A("with","娘と","with my daughter"),A("time","昨日","yesterday"),A("purpose","友達に会うために","to meet a friend",["to see a friend"]),A("who","日本語を勉強している","who is learning Japanese",["who's learning Japanese","who is studying Japanese"]),A("and","一緒に昼ごはんを食べた","and we had lunch together",["and we ate lunch together"])]),
+S("4-m9",5,"mix","昨日、ネットで見たバッグを買うために、娘とそのお店に行きましたが、高すぎました。","そのお店に行きました。","I went to the store.",["I went to the shop."],["行った = went"],[A("with","娘と","with my daughter"),A("time","昨日","yesterday"),A("purpose","バッグを買うために","to buy the bag"),A("that","ネットで見た","that I saw online"),A("but","高すぎた","but it was too expensive")]),
+S("4-m10",5,"mix","英語を話せる友達と旅行していますが、自分でやってみたいです。","友達と旅行しています。","I'm traveling with a friend.",["I'm traveling with my friend."],["旅行している = traveling"],[A("who","英語を話せる","who speaks English",["who can speak English"]),A("but","自分でやってみたい","but I want to try it myself",["but I'd like to try it myself"])])
+];
+const BYID=Object.fromEntries(SETS.map(s=>[s.id,s]));
+const PRACTICE=SETS;
+/* 本番音声ファイルを差し込む場所： "英文": "音声ファイルのURL" */
+const AUDIO={};
+
+/* ============ 保存（この端末のブラウザ内） ============ */
+const KEY="tsugitashi_v1";
+let store=load();
+function load(){try{const v=JSON.parse(localStorage.getItem(KEY)||"null");if(v&&v.v===1)return v}catch(e){}return{v:1,sets:{},days:{},settings:{judge:"mic",rate:0.9,input:"voice"}}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}}
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+
+/* ============ 判定 ============ */
+const CON={"i'm":"i am","you're":"you are","we're":"we are","they're":"they are","it's":"it is","that's":"that is","there's":"there is","who's":"who is","i'd":"i would","you'd":"you would","i'll":"i will","you'll":"you will","we'll":"we will","let's":"let us","can't":"can not","cannot":"can not","don't":"do not","doesn't":"does not","didn't":"did not","isn't":"is not","aren't":"are not","wasn't":"was not","won't":"will not","hasn't":"has not","i've":"i have"};
+const NUM={one:"1",two:"2",three:"3",four:"4",five:"5",six:"6",seven:"7",eight:"8",nine:"9",ten:"10",fifteen:"15",twenty:"20",thirty:"30"};
+const SYN={bicycle:"bike",photo:"picture",photos:"pictures"};
+const DROP=new Set(["a","an","the","some","um","uh","ah","er","oh"]);
+function norm(s){
+  s=String(s).toLowerCase().replace(/[’‘`]/g,"'").replace(/[^a-z0-9' ]+/g," ");
+  return s.split(/\s+/).filter(Boolean).flatMap(w=>{w=w.replace(/^'+|'+$/g,"");return CON[w]?CON[w].split(" "):[w]})
+    .map(w=>NUM[w]||SYN[w]||w).join(" ")
+    /* 同じ意味の言い方をそろえる（別解として扱う） */
+    .replace(/\bwould like to\b/g,"want to").replace(/\bwould like\b/g,"want").replace(/\bwould love to\b/g,"want to")
+    .replace(/\bcould you\b/g,"can you").replace(/\bwould you\b/g,"can you").replace(/\bcould i\b/g,"can i").replace(/\bmay i\b/g,"can i")
+    .split(" ").filter(w=>w&&!DROP.has(w));
+}
+function lev1(a,b){/* 1文字違いまでを同じ単語とみなす（打ち間違い用） */if(Math.abs(a.length-b.length)>1)return false;let i=0,j=0,e=0;while(i<a.length&&j<b.length){if(a[i]===b[j]){i++;j++;continue}if(++e>1)return false;if(a.length>b.length)i++;else if(b.length>a.length)j++;else{i++;j++}}return e+(a.length-i)+(b.length-j)<=1}
+const same=(x,y)=>x===y||(x.length>=5&&y.length>=5&&lev1(x,y));
+function lcs(a,b){const d=Array(b.length+1).fill(0);for(let i=1;i<=a.length;i++){let p=0;for(let j=1;j<=b.length;j++){const t=d[j];d[j]=same(a[i-1],b[j-1])?p+1:Math.max(d[j],d[j-1]);p=t}}return d[b.length]}
+function score(said,target){const t=norm(target),s=norm(said);if(!t.length)return 1;return lcs(t,s)/t.length}
+/* 4文字以上の単語（意味の中心になる語）は全部そろっていること＋全体の8割以上が一致 */
+function keyWordsOk(said,target){const s=norm(said);return norm(target).filter(w=>w.length>=4).every(w=>s.some(x=>same(w,x)))}
+function passes(saidList,targets){
+  let best=0;for(const s of saidList)for(const t of targets){const sc=score(s,t);const need=norm(t).length<=3?1:0.8;if(sc>=need&&keyWordsOk(s,t))return{ok:true,sc};best=Math.max(best,sc)}
+  return{ok:false,sc:best};
+}
+const strip=s=>s.replace(/[.?!]$/,"");
+const endP=s=>(s.match(/[.?!]$/)||["."])[0];
+function joinParts(core,ens,adds){let out=strip(core);ens.forEach((en,i)=>{out+=(COMMA.has(adds[i].t)?", ":" ")+en});
+  const last=ens[ens.length-1]||"";return /[.?!]$/.test(last)?out:out+endP(core)}
+function fullOf(set){return joinParts(set.core,set.adds.map(a=>a.en),set.adds)}
+function fullTargets(set){
+  const out=[];
+  for(const c of [set.core,...set.alt])out.push(joinParts(c,set.adds.map(a=>a.en),set.adds));
+  set.adds.forEach((a,i)=>a.alt.forEach(al=>out.push(joinParts(set.core,set.adds.map((b,j)=>j===i?al:b.en),set.adds))));
+  return out;
+}
+
+/* ============ 音声 ============ */
+let voice=null;
+function pickVoice(){if(!("speechSynthesis" in window))return;const vs=speechSynthesis.getVoices().filter(v=>/^en[-_]US/i.test(v.lang));
+  const pref=["Samantha","Google US English","Microsoft Aria","Microsoft Jenny","Alex"];
+  voice=vs.find(v=>pref.some(p=>v.name.includes(p)))||vs[0]||null}
+if("speechSynthesis" in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
+let curAudio=null;
+function speak(text){
+  if(curAudio){curAudio.pause();curAudio=null}
+  if(AUDIO[text]){curAudio=new Audio(AUDIO[text]);curAudio.play().catch(()=>{});return}
+  if(!("speechSynthesis" in window))return;
+  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=store.settings.rate;if(voice)u.voice=voice;speechSynthesis.speak(u);
+}
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let micBlocked=!SR;
+const inputMode=()=>store.settings.input==="type"?"type":"voice";
+function judgeMode(){return(store.settings.judge==="mic"&&!micBlocked)?"mic":"self"}
+let rec=null;
+/* 聞き取り：PCのChromeは少し間が空くとすぐ止まるため、続けて聞き取り、
+   話し終わってから約2秒黙るか、ボタンをもう一度押したら判定する。
+   何も話さないまま止まった場合は、最大10秒まで自動で聞き直す。最長20秒。 */
+let recCtl=null;
+function listen(onInterim){
+  return new Promise(resolve=>{
+    const t0=Date.now();let parts=[],alts=[],interim="",err=null,done=false,silence=null,userStop=false;
+    const said=()=>{const main=(parts.join(" ")+" "+interim).trim();const out=main?[main]:[];
+      if(alts.length&&parts.length<=1)alts.forEach(a=>{const x=(a+" "+interim).trim();if(x&&!out.includes(x))out.push(x)});return out};
+    const finish=()=>{if(done)return;done=true;clearTimeout(silence);clearTimeout(cap);recCtl=null;rec=null;
+      if(err&&["not-allowed","service-not-allowed","audio-capture"].includes(err))micBlocked=true;resolve({said:said(),err})};
+    const stopNow=()=>{userStop=true;try{rec&&rec.stop()}catch(e){finish()}};
+    const cap=setTimeout(stopNow,20000);
+    recCtl={stop:stopNow};
+    const start=()=>{
+      try{rec=new SR();rec.lang="en-US";rec.interimResults=true;rec.maxAlternatives=3;rec.continuous=true}catch(e){micBlocked=true;err="unsupported";finish();return}
+      rec.onresult=ev=>{interim="";for(let i=ev.resultIndex;i<ev.results.length;i++){const r=ev.results[i];
+          if(r.isFinal){parts.push(r[0].transcript.trim());alts=[...r].map(x=>x.transcript.trim())}else interim+=r[0].transcript}
+        onInterim&&onInterim((parts.join(" ")+" "+interim).trim());
+        clearTimeout(silence);silence=setTimeout(stopNow,2000)};
+      rec.onerror=ev=>{if(ev.error!=="no-speech"&&ev.error!=="aborted")err=ev.error};
+      rec.onend=()=>{
+        if(interim){parts.push(interim.trim());interim=""}
+        if(!userStop&&!err){
+          /* 話している途中で止まった→続きを聞く（2秒黙ると判定）／まだ何も話していない→10秒までは聞き直す */
+          if(parts.length||Date.now()-t0<10000){start();return}
+        }
+        finish()};
+      try{rec.start()}catch(e){if(!parts.length){micBlocked=true;err="start"}finish()}
+    };
+    start();
+  });
+}
+
+/* ============ 確認テスト2：部品を組み合わせて問題を作る ============
+   1つの「場面」ごとに、その場面で意味が通る部品だけを持たせる。
+   slots: 後ろに足す情報 / pre: because・when・if（日本語では文の頭）/ post: and・but・so（日本語では「。でも、」など） */
+const P=(t,jp,en,alt)=>({t,jp,en,alt:alt||[]});
+const GEN_FRAMES=[
+ {core:{jp:"朝ごはんを食べました",en:"I had breakfast.",alt:["I ate breakfast."]},
+  slots:{place:[P("place","ホテルで","at the hotel"),P("place","カフェで","at a cafe",["at the cafe"]),P("place","家で","at home")],
+    time:[P("time","今朝","this morning"),P("time","昨日","yesterday"),P("time","7時に","at seven")],
+    with:[P("with","家族と","with my family"),P("with","友達と","with a friend",["with my friend"]),P("with","娘と","with my daughter")]},
+  pre:[P("because","お腹がすいていたので","because I was hungry")],
+  post:[P("and","コーヒーも飲みました","and I drank some coffee",["and I had some coffee","and I drank coffee","and I had coffee"]),P("but","まだお腹がすいています","but I'm still hungry"),P("so","今はお腹がいっぱいです","so I'm full now")]},
+ {core:{jp:"映画を見ました",en:"I watched a movie.",alt:["I saw a movie."]},
+  slots:{place:[P("place","家で","at home"),P("place","映画館で","at the theater",["at the movie theater","at the cinema"]),P("place","ホテルで","at the hotel")],
+    time:[P("time","昨日の夜","last night"),P("time","先週末","last weekend",["on the weekend"]),P("time","昨日","yesterday")],
+    with:[P("with","娘と","with my daughter"),P("with","友達と","with a friend",["with my friend"]),P("with","夫と","with my husband")]},
+  pre:[P("because","雨が降っていたので","because it was raining")],
+  post:[P("and","少し泣きました","and I cried a little"),P("but","少し長かったです","but it was a little long",["but it was a bit long"]),P("so","今はとても眠いです","so I'm very sleepy now")]},
+ {core:{jp:"英語を勉強しました",en:"I studied English.",alt:["I learned English."]},
+  slots:{place:[P("place","カフェで","at a cafe",["at the cafe"]),P("place","図書館で","at the library"),P("place","家で","at home")],
+    time:[P("time","昨日","yesterday"),P("time","今朝","this morning"),P("time","昨日の夜","last night")],
+    with:[P("with","友達と","with a friend",["with my friend"])],
+    for:[P("for","1時間","for an hour",["for one hour"]),P("for","2時間","for two hours"),P("for","30分","for thirty minutes")],
+    purpose:[P("purpose","海外の友達と話すために","to talk with my friends abroad",["to talk to my friends abroad","to talk with friends abroad"])]},
+  pre:[P("because","来月旅行に行くので","because I'm going on a trip next month",["because I'm traveling next month"])],
+  post:[P("and","新しい単語を10個覚えました","and I learned ten new words"),P("but","まだ上手に話せません","but I still can't speak well")]},
+ {core:{jp:"京都に行きました",en:"I went to Kyoto.",alt:[]},
+  slots:{time:[P("time","先週","last week"),P("time","去年","last year"),P("time","昨日","yesterday")],
+    with:[P("with","家族と","with my family"),P("with","友達と","with a friend",["with my friend"]),P("with","娘と","with my daughter")],
+    by:[P("by","電車で","by train"),P("by","バスで","by bus"),P("by","車で","by car")],
+    purpose:[P("purpose","紅葉を見るために","to see the autumn leaves",["to see autumn leaves"]),P("purpose","お寺を見るために","to see the temples",["to see temples","to visit temples","to visit the temples"])]},
+  pre:[P("because","日本の歴史が大好きなので","because I love Japanese history",["because I like Japanese history"])],
+  post:[P("and","たくさん写真を撮りました","and I took a lot of pictures",["and I took many pictures","and I took lots of pictures","and I took a lot of photos"]),P("but","とても混んでいました","but it was very crowded",["but it was really crowded"])]},
+ {core:{jp:"空港に行きました",en:"I went to the airport.",alt:[]},
+  slots:{time:[P("time","今朝","this morning"),P("time","昨日","yesterday")],
+    with:[P("with","夫と","with my husband"),P("with","娘と","with my daughter")],
+    by:[P("by","電車で","by train"),P("by","タクシーで","by taxi"),P("by","バスで","by bus")],
+    purpose:[P("purpose","母を迎えに行くために","to pick up my mother",["to pick up my mom","to pick my mother up","to pick my mom up"]),P("purpose","友達を見送るために","to see off a friend",["to see a friend off","to see my friend off","to see off my friend"])]},
+  pre:[],
+  post:[P("but","飛行機が遅れていました","but the flight was delayed",["but the plane was delayed"]),P("and","そこでお土産を買いました","and I bought some gifts there",["and I bought gifts there","and I bought souvenirs there","and I bought some souvenirs there"])]},
+ {core:{jp:"娘を待っています",en:"I'm waiting for my daughter.",alt:[]},
+  slots:{place:[P("place","駅で","at the station"),P("place","カフェで","at a cafe",["at the cafe"]),P("place","ホテルのロビーで","in the hotel lobby",["at the hotel lobby"])],
+    time:[P("time","今","now")]},
+  pre:[P("because","一緒に買い物に行くので","because we're going shopping together",["because we are going shopping together"])],
+  post:[P("but","まだ来ません","but she isn't here yet",["but she hasn't come yet","but she is not here yet"])]},
+ {core:{jp:"コーヒーを飲みました",en:"I had coffee.",alt:["I drank coffee.","I had some coffee.","I drank some coffee."]},
+  slots:{place:[P("place","カフェで","at a cafe",["at the cafe"]),P("place","駅の近くのカフェで","at a cafe near the station",["at the cafe near the station"]),P("place","ホテルで","at the hotel")],
+    time:[P("time","今朝","this morning"),P("time","午後に","in the afternoon")],
+    with:[P("with","友達と","with a friend",["with my friend"]),P("with","同僚と","with a coworker",["with a colleague","with my coworker","with my colleague"])]},
+  pre:[P("because","眠かったので","because I was sleepy")],
+  post:[P("and","ケーキも食べました","and I had some cake",["and I ate some cake","and I had cake","and I ate cake"]),P("but","少し苦かったです","but it was a little bitter",["but it was a bit bitter"])]},
+ {core:{jp:"お土産を買いました",en:"I bought some gifts.",alt:["I bought gifts.","I bought souvenirs.","I bought some souvenirs."]},
+  slots:{place:[P("place","空港で","at the airport"),P("place","駅で","at the station"),P("place","このお店で","at this store",["at this shop"])],
+    time:[P("time","昨日","yesterday"),P("time","今朝","this morning")],
+    with:[P("with","娘と","with my daughter"),P("with","友達と","with a friend",["with my friend"])],
+    purpose:[P("purpose","家族にあげるために","to give to my family",["for my family"])]},
+  pre:[],
+  post:[P("but","少し高かったです","but they were a little expensive",["but it was a little expensive","but they were a bit expensive"]),P("and","写真も撮りました","and I took some pictures",["and I took pictures","and I took some photos"])]},
+ {core:{jp:"休憩します",en:"I'll take a break.",alt:["I will take a break.","I'm going to take a break."]},
+  slots:{place:[P("place","カフェで","at a cafe",["at the cafe"]),P("place","ここで","here"),P("place","ホテルで","at the hotel")],
+    for:[P("for","10分","for ten minutes"),P("for","30分","for thirty minutes")]},
+  pre:[P("because","疲れたので","because I'm tired",["because I am tired"])],
+  post:[P("and","そのあと買い物に行きます","and then I'll go shopping",["and I'll go shopping","and then I will go shopping"])]},
+ {core:{jp:"緊張してしまいます",en:"I get nervous.",alt:[]},
+  slots:{},
+  pre:[P("when","英語を話すとき","when I speak English"),P("when","人前で話すとき","when I speak in public",["when I talk in public"]),P("when","電話で話すとき","when I talk on the phone",["when I speak on the phone"])],
+  post:[P("but","楽しいです","but I enjoy it",["but it's fun","but I like it"])]},
+ {core:{jp:"旅行が好きです",en:"I like traveling.",alt:["I love traveling.","I like to travel."]},
+  slots:{},
+  pre:[P("because","新しい人に出会えるので","because I can meet new people"),P("because","色々な食べ物を食べられるので","because I can try different foods",["because I can eat different food","because I can try different food"])],
+  post:[P("so","英語を勉強しています","so I'm learning English",["so I'm studying English","so I study English"]),P("and","写真を撮るのも好きです","and I like taking pictures too",["and I also like taking pictures","and I like taking photos too"])]},
+ {core:{jp:"家にいました",en:"I stayed home.",alt:["I stayed at home."]},
+  slots:{time:[P("time","昨日","yesterday"),P("time","週末","on the weekend",["last weekend","over the weekend"])],
+    with:[P("with","家族と","with my family")]},
+  pre:[P("because","雨が降っていたので","because it was raining"),P("because","疲れていたので","because I was tired")],
+  post:[P("and","本を読みました","and I read a book"),P("but","楽しかったです","but it was fun",["but it was nice"])]},
+ {core:{jp:"買い物に行きました",en:"I went shopping.",alt:[]},
+  slots:{place:[P("place","東京に","in Tokyo"),P("place","駅の近くに","near the station")],
+    time:[P("time","昨日","yesterday"),P("time","先週末","last weekend",["on the weekend"])],
+    with:[P("with","娘と","with my daughter"),P("with","友達と","with a friend",["with my friend"])],
+    purpose:[P("purpose","新しい靴を買うために","to buy new shoes",["to buy some new shoes"])]},
+  pre:[P("because","セールをしていたので","because there was a sale")],
+  post:[P("but","何も買いませんでした","but I didn't buy anything"),P("and","新しいバッグを買いました","and I bought a new bag")]}
+];
+/* that / who の場面：説明（rel）ごとに、一緒に使える続きを持たせる */
+const REL_FRAMES=[
+ {core:{jp:"友達がいます",en:"I have a friend.",alt:[]},
+  rels:[P("who","カナダに住んでいる","who lives in Canada"),P("who","英語を話せる","who speaks English",["who can speak English"]),P("who","料理が上手な","who is good at cooking",["who's good at cooking","who cooks well"]),P("who","日本語を勉強している","who is learning Japanese",["who's learning Japanese","who is studying Japanese","who studies Japanese"])],
+  pre:[],post:[P("and","来月一緒に旅行します","and we're traveling together next month",["and we will travel together next month","and we're going to travel together next month"])]},
+ {core:{jp:"カフェを知っています",en:"I know a cafe.",alt:[]},
+  rels:[P("that","おいしいコーヒーがある","that has good coffee",["that serves good coffee"]),P("that","夜遅くまで開いている","that is open late",["that's open late","that stays open late"])],
+  pre:[],post:[P("so","今度一緒に行きましょう","so let's go there together",["so let's go together"]),P("but","ちょっと遠いです","but it's a little far",["but it's a bit far"])]},
+ {core:{jp:"シャツを買いたいです",en:"I'd like to buy the shirt.",alt:["I want to buy the shirt."]},
+  rels:[P("that","私が試着した","that I tried on"),P("that","ネットで見た","that I saw online")],
+  pre:[P("because","色が気に入ったので","because I like the color",["because I love the color"])],post:[P("but","少し高いです","but it's a little expensive",["but it's a bit expensive"])]},
+ {core:{jp:"本を読んでいます",en:"I'm reading a book.",alt:["I'm reading the book."]},
+  rels:[P("that","友達がすすめてくれた","that my friend recommended",["that a friend recommended"]),P("that","母がくれた","that my mother gave me",["that my mom gave me"])],
+  pre:[],post:[P("and","とても面白いです","and it's very interesting",["and it's really interesting"]),P("but","少し難しいです","but it's a little difficult",["but it's a bit difficult","but it's a little hard"])]},
+ {core:{jp:"先生を探しています",en:"I'm looking for a teacher.",alt:[]},
+  rels:[P("who","英語を教えてくれる","who can teach me English",["who teaches English","who can teach English"])],
+  pre:[P("because","来年留学するので","because I'm going to study abroad next year",["because I'll study abroad next year"])],post:[]}
+];
+const SLOT_ORDER=["with","by","place","for","time","purpose"];
+const CONNECT={and:"そして、",but:"でも、",so:"だから、"};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function genOne(){
+  const useRel=Math.random()<0.25;
+  if(useRel){
+    const f=pick(REL_FRAMES),rel=pick(f.rels);
+    const opts=[...f.pre.map(x=>["pre",x]),...f.post.map(x=>["post",x])];
+    const conj=opts.length?pick(opts):null;
+    const pre=conj&&conj[0]==="pre"?conj[1]:null,post=conj&&conj[0]==="post"?conj[1]:null;
+    return build(f.core,[rel],pre,post,rel.jp);
+  }
+  const f=pick(GEN_FRAMES);const keys=Object.keys(f.slots).filter(k=>f.slots[k].length);
+  const pats=[];
+  if(keys.length>=2)pats.push("AA","AA","AAC");
+  if(keys.length>=1&&(f.pre.length||f.post.length))pats.push("AC","AC");
+  if(f.pre.length&&f.post.length)pats.push("CC");
+  const pat=pick(pats);
+  const nSlots=(pat.match(/A/g)||[]).length;
+  const chosenKeys=shuffle(keys).slice(0,nSlots);
+  const slots=SLOT_ORDER.filter(k=>chosenKeys.includes(k)).map(k=>pick(f.slots[k]));
+  let pre=null,post=null;
+  if(pat==="CC"){pre=pick(f.pre);post=pick(f.post)}
+  else if(pat.includes("C")){const opts=[...f.pre.map(x=>["pre",x]),...f.post.map(x=>["post",x])];const c=pick(opts);if(c[0]==="pre")pre=c[1];else post=c[1]}
+  return build(f.core,slots,pre,post,"");
+}
+function build(core,slots,pre,post,relJp){
+  /* 日本語：〔なぜ・とき〕、〔いつ〕、〔何のために〕、〔誰と〕〔どこで〕〔何で〕〔どのくらい〕＋結論。〔でも・そして・だから〕〜。 */
+  const by=k=>slots.find(s=>s.t===k);
+  let jp=(pre?pre.jp+"、":"")+(by("time")?by("time").jp+"、":"")+(by("purpose")?by("purpose").jp+"、":"")
+    +["with","place","by","for"].map(k=>by(k)?by(k).jp:"").join("")+relJp+core.jp+"。";
+  if(post)jp+=CONNECT[post.t]+post.jp+"。";
+  const adds=[...slots,...(pre?[pre]:[]),...(post?[post]:[])].map(a=>({...a}));
+  const set={lv:"G",cat:"gen",jp,coreJp:core.jp+"。",core:core.en,alt:core.alt,words:[],adds};
+  set.id="G-"+fullOf(set).replace(/[^a-z]/gi,"").slice(0,60);
+  return set;
+}
+function genSession(n){
+  const out=[],seen=new Set();let guard=0;
+  while(out.length<n&&guard++<200){const s=genOne();if(seen.has(s.id))continue;seen.add(s.id);BYID[s.id]=s;out.push(s.id)}
+  return out;
+}
+
+/* ============ 画面 ============ */
+const app=document.getElementById("app");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const IC={
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+  spk:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9a4 4 0 0 1 0 6"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+  play:'<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 20V11M12 20V5M19 20v-6"/></svg>',
+  lock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+  book:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h6a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h6z"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg>',
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-7 8 7"/><path d="M6 9.5V20h4.5v-5h3v5H18V9.5"/></svg>',
+  key:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h1M10.5 10h1M14.5 10h1M17.5 10h.5M7 14h10"/></svg>',
+  shuf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h4v4M4 20L20 4M20 16v4h-4M15 15l5 5M4 4l5 5"/></svg>'
+};
+const TY=k=>TYPES[k]||{l:"",c:"--t-core"};
+function chunk(t,txt,{isNew=false,jp=false,ghost=false}={}){const T=TY(t);return`<span class="chunk${isNew?" new":""}${jp?" jp":""}${ghost?" ghost":""}" style="--c:var(${T.c})"><span class="tag">${T.l}</span><span class="txt${jp?"":" en"}">${esc(txt)}</span></span>`}
+const PLUS='<span class="plus">+</span>';
+/* 「+」と次のかたまりを1つにまとめ、行末に「+」だけ残らないようにする */
+const plusChunk=(t,txt,o)=>'<span class="grp">'+PLUS+chunk(t,txt,o)+'</span>';
+let view="home",sess=null,st=null,banner="",lvView=1;
+
+const lvIds=n=>SETS.filter(s=>s.lv===n).map(s=>s.id);
+const LEVELS=[
+  {n:1,name:"まず結論を言う",sub:"日本語から結論を選ぶ",ids:lvIds(1)},
+  {n:2,name:"後ろに情報を足す（レベル1）",sub:"どこで・いつ／前置詞系／to不定詞",ids:lvIds(2)},
+  {n:3,name:"後ろに情報を足す（レベル2）",sub:"and / but / so / because / when / if",ids:lvIds(3)},
+  {n:4,name:"後ろに情報を足す（レベル3）",sub:"that / who",ids:lvIds(4)},
+  {n:5,name:"後ろに情報を足す（レベル4）",sub:"総合問題（全部組み合わせる）",ids:lvIds(5)}
+];
+const isTest=()=>sess&&sess.mode!=="practice";
+const catName=set=>isTest()?(sess.mode==="t1"?"確認テスト1":"確認テスト2"):set.lv===1?"ステップ1":"ステップ"+set.lv+"・"+CATS[set.lv].find(c=>c.k===set.cat).name.replace(/（.*）/,"");
+function dispText(set,i){/* i=-1:結論の文 */const t=i<0?strip(set.core):set.adds[i].en;const nx=set.adds[i+1];return nx&&COMMA.has(nx.t)?t+",":t}
+const WAYS=[
+  {t:"place",short:"どこで\nいつ",name:"どこで・いつ",lv:"ステップ2",ex:[[["core","I had breakfast"],["place","at the hotel"],["time","this morning."]]]},
+  {t:"with",short:"前置詞",name:"前置詞で足す（with / by / for / about / from など）",lv:"ステップ2",ex:[[["core","I talked with my friend"],["about","about our trip."]],[["core","I got a letter"],["from","from a friend."]],[["core","I'm traveling"],["with","with my daughter."]],[["core","I went to the airport"],["by","by train."]],[["core","I'm staying at this hotel"],["for","for three days."]]]},
+  {t:"purpose",short:"何の\nために",name:"何のために（to＋動詞）",lv:"ステップ2",ex:[[["core","I went to the cafe"],["purpose","to meet a friend."]]]},
+  {t:"reason",short:"話を\nつなぐ",name:"話をつなぐ（接続詞）",lv:"ステップ3",ex:[[["core","I like the shirt,"],["but","but it's a little big."]],[["core","I'm learning English"],["because","because I like traveling."]],[["core","Let's have coffee"],["if","if you have time."]]]},
+  {t:"desc",short:"人・物の\n説明",name:"人・物を説明する（that / who）",lv:"ステップ4",ex:[[["core","I know a cafe"],["desc","that has good coffee."]],[["core","I have a friend"],["desc","who loves traveling."]]]}
+];
+
+function render(){({home:renderHome,level:renderLevel,record:renderRecord,library:renderLibrary,practice:renderPractice,summary:renderSummary}[view])();addWbr(app)}
+/* 日本語を文節のまとまりで改行させる：ひらがなの後に漢字・カタカナ・英数字・かっこが来る位置と、「・」「／」の後に改行候補を入れる。
+   CSSの word-break:keep-all と組み合わせて、単語の途中で折り返さないようにする */
+const RE_H=/[\u3041-\u309F]/,RE_NEXT=/[\u4E00-\u9FFF\u3005\u30A0-\u30FFA-Za-z0-9（「]/,RE_AFTER=/[・／]/;
+function fixSlash(root){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(w.nextNode()){const n=w.currentNode;if(n.data.includes(" / "))n.data=n.data.replace(/ \/ /g,"\u00A0/ ")}}
+function addWbr(root){fixSlash(root);
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];
+  while(w.nextNode()){const n=w.currentNode;const pe=n.parentElement;if(pe.closest("input,textarea,script,style")||getComputedStyle(pe).whiteSpace==="nowrap")continue;if(/[\u3041-\u30FF\u4E00-\u9FFF]/.test(n.data))nodes.push(n)}
+  for(const n of nodes){const s=n.data;const cut=[];
+    for(let i=1;i<s.length;i++){if((RE_H.test(s[i-1])&&RE_NEXT.test(s[i]))||RE_AFTER.test(s[i-1]))cut.push(i)}
+    if(!cut.length)continue;const f=document.createDocumentFragment();let p=0;
+    for(const c of cut){f.append(s.slice(p,c),document.createElement("wbr"));p=c}
+    f.append(s.slice(p));n.replaceWith(f)}
+}
+function lastRes(id){return store.sets[id]?.last?.res||null}
+function curLevel(){const open=LEVELS.filter(l=>l.ids.length);return(open.find(l=>l.ids.some(id=>lastRes(id)!=="ok"))||open[open.length-1]).n}
+function navTop(title,sub,back="home"){return`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">${esc(title)}${sub?`<small>${esc(sub)}</small>`:""}</div><span style="width:40px"></span></header>`}
+
+function renderHome(){
+  const cur=curLevel();const q=todayQ=buildToday();const first=BYID[q[0]];const started=Object.keys(store.sets).length>0;
+  const stairs=LEVELS.slice().reverse().map(l=>{
+    const locked=!l.ids.length;const ok=l.ids.filter(id=>lastRes(id)==="ok").length;
+    const off=`calc(${l.n-1} * min(16px, 3.5vw))`;
+    return`<button class="step glass ${l.n===cur?"cur":""} ${locked?"lock":""}" style="--off:${off}" ${locked?"disabled":`data-act="level" data-v="${l.n}"`}>
+      <span style="min-width:0"><span class="num"><b>${l.n}</b><span>${esc(l.name)}</span></span><span class="sub" style="display:block">${esc(l.sub)}</span>
+      ${locked?"":`<span class="bar">${l.ids.map(id=>`<i class="${lastRes(id)||""}"></i>`).join("")}</span>`}</span>
+      <span class="right">${locked?`<span class="lockico">${IC.lock}</span>準備中`:`${l.n===cur?'<span class="pill">いまここ</span>':""}<span>${ok} / ${l.ids.length}</span>`}</span></button>`}).join("");
+  app.innerHTML=`<header class="top"><div class="brand"><span class="logo"><i></i><i></i><i></i></span><b>つぎ足し英作文</b></div><button class="round" data-act="go" data-v="record" aria-label="記録と設定">${IC.chart}</button></header>
+  <button class="glass ways" data-act="go" data-v="library"><span class="head"><span>後ろから情報を足す5つのパターン</span><span>見る ›</span></span>
+    <span class="row5">${WAYS.map(w=>`<span class="w" style="--c:var(${TY(w.t).c})"><i></i><span>${esc(w.short).replace("\n","<br>")}</span></span>`).join("")}</span></button>
+  <div class="stairs">${stairs}</div>
+  <button class="cta" data-act="today"><span class="playc">${IC.play}</span><span class="t"><b>${started?"続きから":"はじめる"}</b><span>今日の${q.length}問 ・ ${esc(first.jp)}</span></span><span aria-hidden="true">›</span></button>
+  <div class="tiles">
+    <button class="glass tile" data-act="go" data-v="library"><span class="ic">${IC.book}</span><span><b>5つのパターン</b><span>お手本と例文</span></span></button>
+    <button class="glass tile" data-act="mix"><span class="ic">${IC.shuf}</span><span><b>ランダム出題</b><span>全ステップをまぜて</span></span></button>
+  </div>
+  <div class="tiles">
+    <button class="glass tile" data-act="test1"><span class="ic">${IC.check}</span><span><b>確認テスト1</b><span>練習した問題を、ヒントなしで復習</span></span></button>
+    <button class="glass tile" data-act="test2"><span class="ic">${IC.check}</span><span><b>確認テスト2</b><span>ステップ5まで終わったら挑戦しよう！毎回ちがう問題が出ます</span></span></button>
+  </div>
+  ${micBlocked&&store.settings.judge==="mic"?`<div class="banner">この画面ではマイクが使えないため、「自分で判定」で進みます。</div>`:""}
+  <p class="foot">たかしとれいちゃんの英語日和</p>`;
+}
+
+function buildToday(){
+  const tried=PRACTICE.filter(s=>store.sets[s.id]);
+  const review=tried.filter(s=>lastRes(s.id)!=="ok").sort((a,b)=>store.sets[a.id].last.t-store.sets[b.id].last.t).slice(0,2).map(s=>s.id);
+  /* 新しい問題は「今いるステップ」の未挑戦からランダムに選ぶ（毎回同じ1問目にならないように） */
+  const lvNow=curLevel();let freshPool=PRACTICE.filter(s=>!store.sets[s.id]&&s.lv===lvNow);
+  if(!freshPool.length)freshPool=PRACTICE.filter(s=>!store.sets[s.id]);
+  const fresh=shuffle(freshPool).slice(0,Math.max(1,3-review.length)).map(s=>s.id);
+  let q=[...fresh,...review];
+  if(q.length<3){const pool=shuffle(tried.map(s=>s.id).filter(id=>!q.includes(id)));q=q.concat(pool.slice(0,3-q.length))}
+  return q;
+}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const marks=ids=>`<span class="marks">${ids.map(id=>`<i class="${lastRes(id)||""}"></i>`).join("")}</span>`;
+
+function renderLevel(){
+  const l=LEVELS[lvView-1];
+  let inner="";
+  if(l.n===1){inner=`<section class="glass panel"><h2>ステップ1　まず結論を言う</h2><p class="small">日本語から「結論」を選んで、その短い文だけを英語にします。いつ・どこで・どんな、は後回し。</p>${marks(l.ids)}</section>`}
+  else{const desc={2:"結論の文を言ってから、情報を1つずつ後ろに足します。",3:"短い文を言ってから、and・but・soなどで次の話をつなぎます。",4:"人や物を言ってから、that・whoで説明を足します。",5:"ここまでの足し方を全部組み合わせて、長い文を組み立てます。"}[l.n];
+    inner=`<section class="glass panel"><h2>ステップ${l.n}　${l.name}</h2><p class="small">${desc}</p>
+    <div class="cats">${CATS[l.n].map(c=>{const ids=SETS.filter(s=>s.lv===l.n&&s.cat===c.k).map(s=>s.id);
+      return`<button class="cat" style="--c:var(${TY(c.k).c})" data-act="start" data-ids="${ids.join(",")}"><span class="nm"><i></i>${c.name}</span><span class="en">${c.en}</span>${marks(ids)}</button>`}).join("")}</div></section>`}
+  app.innerHTML=navTop("ステップ"+l.n,l.ids.filter(id=>lastRes(id)==="ok").length+" / "+l.ids.length)+inner+
+  `<div class="dock"><button class="big lite" data-act="random" data-lv="${l.n}">ランダム5問</button><button class="big" data-act="start" data-ids="${l.ids.join(",")}">順番に練習</button></div>`;
+}
+
+function renderLibrary(){
+  app.innerHTML=navTop("5つのパターン")+`
+  <div class="qhead"><h2>後ろから情報を足す5つのパターン</h2></div>
+  <p class="small" style="text-align:center">まず短く言って、後ろに足す。▶で英文を聞けます。</p>
+  ${WAYS.map((w,i)=>`<section class="way" style="--c:var(${TY(w.t).c})"><div class="wh"><b>${i+1}．${esc(w.name)}</b><span class="small">${w.lv}</span></div>
+    ${w.ex.map(ex=>{const full=ex.map(p=>p[1]).join(" ");return`<div class="ex">${ex.map((p,j)=>{const h=j?plusChunk(p[0],p[1]):chunk(p[0],p[1]);return j===ex.length-1?`<span class="grp">${h}<button class="play" data-act="play" data-t="${esc(full)}" aria-label="再生">${IC.spk}</button></span>`:h}).join("")}</div>`}).join("")}
+  </section>`).join("")}
+  <p class="foot">それぞれの練習は、ホームのステップから選べます</p>`;
+}
+
+function stepLabel(set,k,i){if(k==="pick")return"結論を選ぶ";if(k==="core")return"結論を英語に";if(k==="add")return"＋"+TY(set.adds[i].t).l;if(k==="full")return"通しで言う";return""}
+function dkey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function renderRecord(){
+  const ids=Object.keys(store.sets).filter(id=>BYID[id]);const ok=ids.filter(id=>lastRes(id)==="ok").length;
+  const T=store.tests||{};const tline=(k,empty)=>{const x=T[k];return x&&x.n?`挑戦 ${x.n}問　・　ヒントなしで言えた ${x.ok}問（${Math.round(x.ok/x.n*100)}%）`:empty};
+  let streak=0;{const d=new Date();if(!store.days[today()])d.setDate(d.getDate()-1);while(store.days[dkey(d)]){streak++;d.setDate(d.getDate()-1)}}
+  const days=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const n=store.days[dkey(d)]||0;days.push(`<i class="${n>=3?"d2":n>0?"d1":""}" title="${dkey(d)}：${n}問"></i>`)}
+  const sm={};ids.forEach(id=>{const s=store.sets[id].last.stuck;if(s)(sm[s]=sm[s]||[]).push(id)});
+  const stuck=Object.entries(sm).sort((a,b)=>b[1].length-a[1].length).slice(0,4);
+  const rev=ids.filter(id=>lastRes(id)!=="ok").sort((a,b)=>store.sets[b].last.t-store.sets[a].last.t).slice(0,8);
+  const R=store.settings.rate;
+  app.innerHTML=navTop("記録と設定")+`
+  <div class="stats"><div class="stat"><b>${ids.length}</b><span>取り組んだ<br>/ ${PRACTICE.length}問</span></div><div class="stat"><b>${ok}</b><span>ヒントなしで<br>言えた</span></div><div class="stat"><b>${streak}</b><span>連続日数</span></div></div>
+  <section class="glass panel"><h2>直近14日</h2><div class="days">${days.join("")}</div></section>
+  <section class="glass panel"><h2>確認テスト</h2>
+    <div class="li"><span class="q"><b>テスト1</b>　練習した問題の復習<br><span class="small">${tline("t1","まだ挑戦していません")}</span></span><button class="chipbtn" data-act="test1">受ける</button></div>
+    <div class="li"><span class="q"><b>テスト2</b>　毎回ちがう新しい問題（ステップ5まで終わったら挑戦しよう！）<br><span class="small">${tline("t2","まだ挑戦していません")}</span></span><button class="chipbtn" data-act="test2">受ける</button></div></section>
+  <section class="glass panel"><h2>止まりやすいところ</h2>
+    ${stuck.length?stuck.map(([lab,arr])=>`<div class="li"><span>${esc(lab)}<span class="small">　${arr.length}問</span></span><button class="chipbtn" data-act="start" data-ids="${arr.join(",")}">ここを練習</button></div>`).join("")
+      :`<p class="small">問題に取り組むと、どこで止まったかがここに出ます。</p>`}</section>
+  ${rev.length?`<section class="glass panel"><h2>復習が必要な問題</h2><div>${rev.map(id=>`<div class="li"><span class="q">${esc(BYID[id].jp)}</span><span class="chip ${lastRes(id)}">${lastRes(id)==="hint"?"ヒントあり":"要復習"}</span></div>`).join("")}</div>
+    <button class="big" data-act="start" data-ids="${rev.join(",")}">まとめて復習する</button></section>`:""}
+  <section class="glass panel"><h2>設定</h2>
+    <div class="setting"><span>練習方法</span><span class="seg glass"><button class="${inputMode()==="voice"?"on":""}" data-act="input" data-v="voice">声に出す</button><button class="${inputMode()==="type"?"on":""}" data-act="input" data-v="type">タイピング</button></span></div>
+    <div class="setting"><span>声に出すときの判定</span><span class="seg glass"><button class="${store.settings.judge==="mic"?"on":""}" data-act="judge" data-v="mic">マイク</button><button class="${store.settings.judge==="self"?"on":""}" data-act="judge" data-v="self">自分で</button></span></div>
+    <div class="setting"><span>お手本の速さ</span><span class="seg glass"><button class="${R===0.75?"on":""}" data-act="rate" data-v="0.75">ゆっくり</button><button class="${R===0.9?"on":""}" data-act="rate" data-v="0.9">ふつう</button><button class="${R===1.05?"on":""}" data-act="rate" data-v="1.05">速め</button></span></div>
+    ${micBlocked?`<p class="small">この画面ではマイクが使えないため、「自分で」判定になります。</p>`:""}</section>
+  <p class="foot">記録はこの端末のブラウザに保存されます。</p>`;
+}
+
+/* ---------- 練習 ---------- */
+let backTo="home";
+let navStack=[],todayQ=null;
+/* 1つ戻る：練習中は1段階前へ（最初の段階なら練習前の画面へ）、それ以外は1つ前の画面へ */
+function goBack(){stopRec();banner="";
+  if(view==="practice"&&st&&st.si>0){delete st.res[st.si];st.si--;delete st.res[st.si];
+    Object.assign(st,{ph:"ready",hint:0,heard:"",typed:"",via:""});if(curStep().k==="pick")st.picked=[];
+    render();window.scrollTo(0,0);if(inputMode()==="type"&&curStep().k!=="pick")focusAns();return}
+  if(view==="practice"||view==="summary"){view=backTo||"home";render();window.scrollTo(0,0);return}
+  view=navStack.pop()||"home";render();window.scrollTo(0,0)}
+function startSession(ids,mode="practice"){backTo=view==="practice"||view==="summary"?backTo:view;sess={ids,i:0,res:[],chosen:false,mode};startSet();view="practice";render();window.scrollTo(0,0)}
+function startSet(){
+  const set=BYID[sess.ids[sess.i]];
+  /* ステップ1だけ「結論を選ぶ」から。ステップ2以降は英語にするところから */
+  const steps=isTest()?[{k:"full"}]:set.lv===1?[{k:"pick"},{k:"core"},{k:"preview"}]:[{k:"core"}];
+  if(!isTest()&&set.lv!==1){set.adds.forEach((a,i)=>steps.push({k:"add",i}));steps.push({k:"full"})}
+  const opts=shuffle([{t:set.coreJp,ok:true},{t:set.jp,why:"full"},{t:set.adds[0].jp,why:"detail"}]);
+  st={set,steps,si:0,res:{},opts,picked:[],ph:"ready",hint:0,heard:""};
+  if(steps[0].k!=="pick"&&!sess.chosen)st.ph="choose";
+}
+const curStep=()=>st.steps[st.si];
+const DONE=["passed","revealed","checked"];
+function stepTargets(){const s=curStep(),set=st.set;
+  if(s.k==="core")return[set.core,...set.alt];
+  if(s.k==="add"){const a=set.adds[s.i];return[a.en,...a.alt]}
+  if(s.k==="full")return fullTargets(set);return[]}
+function stepAnswer(){const s=curStep(),set=st.set;if(s.k==="core")return set.core;if(s.k==="add")return set.adds[s.i].en;if(s.k==="full")return fullOf(set);return""}
+function hintList(){const s=curStep(),set=st.set;
+  if(s.k==="core")return["語句："+set.words.map(esc).join("　/　"),"出だし：<span class='en'>"+esc(set.core.split(" ").slice(0,2).join(" "))+" …</span>"];
+  if(s.k==="add"){const a=set.adds[s.i];const n=["and","but","so","because","when","if","that","who"].includes(a.t)?2:1;return["出だし：<span class='en'>"+esc(a.en.split(" ").slice(0,n).join(" "))+" …</span>"]}
+  if(s.k==="full"&&isTest())return["順番："+[set.coreJp.replace(/[。？]/g,""),...set.adds.map(a=>a.jp)].map(esc).join(" → ")];
+  if(s.k==="full")return["順番："+[set.coreJp.replace(/[。？]/g,""),...set.adds.map(a=>a.jp)].map(esc).join(" → "),
+    "出だし：<span class='en'>"+[set.core.split(" ").slice(0,2).join(" "),...set.adds.map(a=>a.en.split(" ")[0])].map(w=>esc(w)+" …").join(" ／ ")+"</span>"];
+  return[]}
+function builtHTML(){
+  const set=st.set,s=curStep(),done=DONE.includes(st.ph)||st.ph==="selfcheck";
+  if(s.k==="core"&&!done)return`<div class="sent"><span class="small">ここに英文ができていきます</span></div>`;
+  if(s.k==="full"&&!done)return`<div class="sent"><span class="small">ヒントなしで、最初から言ってみよう</span></div>`;
+  const parts=[chunk("core",dispText(set,-1),{isNew:s.k==="core"})];
+  set.adds.forEach((a,i)=>{
+    const shown=(s.k==="add"&&(i<s.i||(i===s.i&&done)))||s.k==="full";
+    if(shown)parts.push(plusChunk(a.t,dispText(set,i),{isNew:s.k==="add"&&i===s.i}));
+    else if(s.k==="add"&&i===s.i)parts.push(plusChunk(a.t,a.jp,{jp:true,ghost:true}));
+  });
+  return`<div class="sent">${parts.join("")}</div>`;
+}
+function tabsHTML(){
+  const set=st.set,s=curStep();
+  if(isTest())return`<div class="tabs glass"><span class="tab cur"><i>!</i>ヒントなしで、最初から全部言う</span></div>`;
+  const names=set.lv===1?["結論を選ぶ","英語にする","まとめ"]:["英語にする","後ろに足す","通しで言う"];
+  const idx=k=>set.lv===1?({pick:0,core:1,preview:2})[k]:({core:0,add:1,full:2})[k];
+  const ci=idx(s.k);
+  return`<div class="tabs glass">${names.map((n,i)=>`<span class="tab ${i<ci?"done":i===ci?"cur":""}"><i>${i<ci?"✓":i+1}</i>${n}</span>`).join("")}</div>`;
+}
+function renderPractice(){
+  const set=st.set,s=curStep(),mode=judgeMode();
+  const lvl=catName(set);
+  let h2="",sub="",stage="",under="",dock="";
+  if(s.k==="pick"){
+    const solved=st.picked.some(o=>o.ok),last=st.picked[st.picked.length-1];
+    h2="まず、結論は？";sub="詳しい説明は後回し。短い文を選ぼう";
+    stage=`<div class="opts">${st.opts.map((o,i)=>{const p=st.picked.includes(o);return`<button class="opt ${p?(o.ok?"right":"wrong"):""}" data-act="pick" data-i="${i}" ${solved?"disabled":""}>${esc(o.t)}</button>`}).join("")}</div>`;
+    if(last&&!last.ok)stage+=`<div class="note ng">${last.why==="full"?"それは全部です。いきなり全部を英語にせず、まずは短い結論だけ。":"「"+esc(last.t)+"」は、あとで後ろに足す情報です。"}</div>`;
+    if(solved)stage+=`<div class="note ok">まずは「${esc(set.coreJp)}」から。${set.adds.map(a=>"「"+esc(a.jp)+"」").join("")}は、あとで足します。</div>`;
+    dock=`<button class="big" data-act="next" ${solved?"":"disabled"}>${solved?"英語にしてみる":"結論を選んでください"}</button>`;
+  }else if(s.k==="preview"){
+    h2="結論の文が言えました";sub="残りは、後ろに足していく情報です";
+    stage=`<div class="sent">${chunk("core",strip(set.core))}${set.adds.map(a=>plusChunk(a.t,a.jp,{jp:true,ghost:true})).join("")}</div>
+      <div class="note">点線の部分は、ステップ2以降で英語にして後ろに足していきます。</div>
+      <div class="answer"><button class="play" data-act="play" data-t="${esc(set.core)}">${IC.spk}お手本</button></div>`;
+    dock=`<button class="big" data-act="finishSet">${sess.i+1<sess.ids.length?"次の問題へ":"結果を見る"}</button>`;
+  }else{
+    if(s.k==="core"){h2="結論の文を英語で";sub="「"+set.coreJp+"」"}
+    if(s.k==="add"){const a=set.adds[s.i];h2="後ろに「"+a.jp+"」を足そう";sub=TY(a.t).l+"を足す　"+(s.i+1)+" / "+set.adds.length}
+    if(s.k==="full"){h2=isTest()?"英語で言ってみよう":"最初から通して言おう";sub=isTest()?"まず結論を言って、後ろに足していく":"ヒントなしで挑戦"}
+    if(st.ph==="choose"){h2="どうやって練習する？";sub="このあとの問題も同じ方法で進みます。右上のボタンでいつでも切り替えられます"}
+    const hl=hintList(),hs=hl.slice(0,st.hint).map(h=>`<div class="note hi">${h}</div>`).join("");
+    stage=builtHTML()+hs;
+    if(st.ph==="choose"){
+      const cur=inputMode();
+      stage=`<div class="choose">
+        <button class="pickm ${cur==="voice"?"last":""}" data-act="choose" data-v="voice"><span class="ic">${IC.mic}</span><span><b>声に出して練習</b><span>話した英語をマイクで判定します。本番の会話に一番近い練習です</span></span></button>
+        <button class="pickm ${cur==="type"?"last":""}" data-act="choose" data-v="type"><span class="ic">${IC.key}</span><span><b>タイピングで練習</b><span>英語を入力して判定します。声を出せない場所でも練習できます</span></span></button></div>`;
+      dock="";under="";
+    }else if(DONE.includes(st.ph)){
+      const r=st.res[st.si];
+      stage+=`<div class="answer"><div class="note ${r==="ng"?"ng":"ok"}">${r==="ok"?"言えました！":r==="hint"?"ヒントを使って言えました。":"お手本を聞いて、まねして言ってから次へ。"}</div>
+        <span class="en">${esc(stepAnswer())}</span><button class="play" data-act="play" data-t="${esc(stepAnswer())}">${IC.spk}お手本</button>
+        ${st.heard?`<span class="heard">${st.via==="type"?"入力":"聞き取り"}：${esc(st.heard)}</span>`:""}</div>`;
+      dock=`<button class="big" data-act="next">${st.si===st.steps.length-1?(sess.i+1<sess.ids.length?"次の問題へ":"結果を見る"):"次へ"}</button>`;
+    }else if(st.ph==="selfcheck"){
+      stage+=`<div class="answer"><span class="en">${esc(stepAnswer())}</span><button class="play" data-act="play" data-t="${esc(stepAnswer())}">${IC.spk}お手本</button><span class="small">声に出した英語と比べて、どうでしたか？</span></div>`;
+      dock=`<button class="big lite" data-act="self" data-v="ng">言えなかった</button><button class="big" data-act="self" data-v="ok">言えた</button>`;
+    }else if(inputMode()==="type"){
+      stage+=`<div class="typewrap"><label class="small" for="ans">英語で入力してください</label>
+        <input id="ans" class="en" type="text" value="${esc(st.typed||"")}" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" lang="en" enterkeyhint="done" placeholder="${s.k==="add"?"続きだけでも、最初からでもOK":""}"></div>`;
+      if(st.ph==="retry")stage+=`<div class="note hi">惜しい！足りない単語か、違う単語があります。直してもう一度。</div>`;
+      dock=`<button class="big lite" data-act="giveup">答えを見る</button><button class="big" data-act="typecheck">答え合わせ</button>`;
+    }else if(mode==="mic"){
+      const lis=st.ph==="listening";
+      stage+=`<div class="micwrap"><button class="micbtn ${lis?"listening":""}" data-act="mic" aria-label="${lis?"止める":"話す"}"><span>${IC.mic}<small>${lis?"止めて判定":"話す"}</small></span></button>
+        <div class="heard" id="heard">${lis?"聞いています。話し終わったら少し待つか、ボタンを押してください":st.ph==="retry"?"聞き取り：「"+esc(st.heard||"聞き取れませんでした")+"」":"押してから英語で話してください"}</div></div>`;
+      if(st.ph==="retry")stage+=`<div class="note hi">惜しい！もう一度、またはヒントを見てから挑戦してみよう。</div>`;
+      dock=`<button class="big lite" data-act="giveup">答えを見る</button>`;
+    }else{
+      stage+=`<div class="micwrap"><p class="small" style="text-align:center">まず声に出して言ってから、<br>下のボタンで答えを確認します。</p></div>`;
+      dock=`<button class="big" data-act="reveal-self">言ったので答えを見る</button>`;
+    }
+    if(st.ph!=="choose"&&!DONE.includes(st.ph)&&st.ph!=="selfcheck"){
+      const acts=[];if(st.hint<hl.length)acts.push(`<button class="chipbtn" data-act="hint">ヒント${hl.length>1?`（${st.hint+1}/${hl.length}）`:""}</button>`);
+      if(st.ph==="retry")acts.push(`<button class="ghost" data-act="override">${inputMode()==="type"?"合っているはずなのに判定されなかった":"言えていたのに判定されなかった"}</button>`);
+      under=acts.length?`<div class="subacts">${acts.join("")}</div>`:"";
+    }
+    const R=store.settings.rate;
+    if(st.ph!=="choose")under+=`<div class="seg glass"><button class="${R===0.75?"on":""}" data-act="rate" data-v="0.75">ゆっくり</button><button class="${R===0.9?"on":""}" data-act="rate" data-v="0.9">ふつう</button></div>`;
+  }
+  app.innerHTML=`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">${esc(lvl)}<small>${sess.i+1} / ${sess.ids.length}</small></div><button class="round" data-act="input" data-v="${inputMode()==="type"?"voice":"type"}" aria-label="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}" title="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}">${inputMode()==="type"?IC.mic:IC.key}</button></header>
+  ${tabsHTML()}
+  <div class="qhead"><h2>${esc(h2)}</h2><p>${esc(sub)}</p></div>
+  <section class="glass stage"><div class="jpq">${esc(set.jp)}</div>${stage}</section>
+  ${under}
+  ${banner?`<div class="banner">${esc(banner)}</div>`:""}
+  <div class="dock">${dock}</div>`;
+}
+
+function setResult(r){st.res[st.si]=r}
+function finishSet(){
+  const set=st.set;const order={ok:0,hint:1,ng:2};let worst="ok",stuck=null;
+  st.steps.forEach((x,i)=>{const r=st.res[i];if(!r)return;if(order[r]>order[worst])worst=r;if(r!=="ok"&&!stuck)stuck=stepLabel(set,x.k,x.i)});
+  if(isTest()){store.tests=store.tests||{};const x=store.tests[sess.mode]||{n:0,ok:0};x.n++;if(worst==="ok")x.ok++;store.tests[sess.mode]=x}
+  else{const rec=store.sets[set.id]||{n:0,okN:0,hist:[]};
+  rec.n++;if(worst==="ok")rec.okN++;rec.last={t:Date.now(),res:worst,stuck};rec.hist=[...rec.hist,{t:Date.now(),res:worst,stuck}].slice(-6);
+  store.sets[set.id]=rec}
+  store.days[today()]=(store.days[today()]||0)+1;save();
+  sess.res.push({id:set.id,res:worst,stuck});sess.i++;
+  if(sess.i>=sess.ids.length){view="summary"}else startSet();
+  render();window.scrollTo(0,0);
+}
+function renderSummary(){
+  const lab={ok:"ヒントなし",hint:"ヒントあり",ng:"要復習"};const n=sess.res.filter(r=>r.res==="ok").length;
+  app.innerHTML=`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">おつかれさまでした</div><span style="width:40px"></span></header>
+  <div class="qhead" style="padding-top:8px"><h2>${n} / ${sess.res.length} 問を<br>ヒントなしで言えました</h2><p>止まったところは、学習記録からもう一度練習できます</p></div>
+  <section class="glass panel"><div>${sess.res.map(r=>`<div class="li"><span class="q">${esc(BYID[r.id].jp)}${r.stuck?`<br><span class="small">止まったところ：${esc(r.stuck)}</span>`:""}</span><span class="chip ${r.res}">${lab[r.res]}</span></div>`).join("")}</div></section>
+  <div class="tiles">${isTest()?`<button class="glass tile" data-act="${sess.mode==="t1"?"test1":"test2"}"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>新しい5問で</span></span></button>`:`<button class="glass tile" data-act="start" data-ids="${sess.ids.join(",")}"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>同じ問題で</span></span></button>`}
+  <button class="glass tile" data-act="go" data-v="record"><span class="ic">${IC.chart}</span><span><b>学習記録</b><span>止まった場所を見る</span></span></button></div>
+  <div class="dock"><button class="big" data-act="today">次の練習へ</button></div>`;
+}
+
+/* ---------- 操作 ---------- */
+app.addEventListener("click",async e=>{
+  const b=e.target.closest("[data-act]");if(!b||b.disabled)return;const act=b.dataset.act;
+  if(act==="go"){stopRec();const v=b.dataset.v;if(v==="home")navStack=[];else if(view!==v&&view!=="practice")navStack.push(view);view=v;render();window.scrollTo(0,0)}
+  else if(act==="level"){lvView=+b.dataset.v;if(view!=="level")navStack.push(view);view="level";render();window.scrollTo(0,0)}
+  else if(act==="back"){goBack()}
+  else if(act==="today"){startSession(todayQ&&todayQ.length&&view==="home"?todayQ:buildToday())}
+  else if(act==="mix"){startSession(shuffle(PRACTICE.map(s=>s.id)).slice(0,5))}
+  else if(act==="test1"){const tried=PRACTICE.filter(s=>store.sets[s.id]&&s.lv!==1).map(s=>s.id);const pool=tried.length>=5?tried:PRACTICE.filter(s=>s.lv!==1).map(s=>s.id);startSession(shuffle(pool).slice(0,5),"t1")}
+  else if(act==="test2"){startSession(genSession(5),"t2")}
+  else if(act==="start"){const ids=b.dataset.ids.split(",");
+    /* 順番に練習：まだ解いていない問題から始め、解いた問題は後ろに回す */
+    startSession([...ids.filter(id=>!store.sets[id]),...ids.filter(id=>store.sets[id])])}
+  else if(act==="random"){startSession(shuffle(SETS.filter(s=>s.lv===+b.dataset.lv).map(s=>s.id)).slice(0,5))}
+  else if(act==="input"){store.settings.input=b.dataset.v;save();render();if(view==="practice"&&inputMode()==="type")focusAns()}
+  else if(act==="typecheck"){typeCheck()}
+  else if(act==="judge"){store.settings.judge=b.dataset.v;save();render()}
+  else if(act==="rate"){store.settings.rate=+b.dataset.v;save();render();if(view!=="practice")speak("I had breakfast at the hotel this morning.")}
+  else if(act==="quit"){stopRec();view=backTo||"home";render()}
+  else if(act==="pick"){const o=st.opts[+b.dataset.i];if(st.picked.includes(o))return;st.picked.push(o);if(o.ok)setResult(st.picked.length===1?"ok":"hint");render()}
+  else if(act==="next"){st.si++;st.ph="ready";st.hint=0;st.heard="";st.typed="";st.via="";banner="";if(st.si>=st.steps.length)return finishSet();
+    if(["core","full"].includes(curStep().k)&&!sess.chosen)st.ph="choose";render();if(st.ph==="ready"&&inputMode()==="type")focusAns()}
+  else if(act==="choose"){store.settings.input=b.dataset.v;save();sess.chosen=true;st.ph="ready";render();if(inputMode()==="type")focusAns()}
+  else if(act==="finishSet"){finishSet()}
+  else if(act==="play"){speak(b.dataset.t)}
+  else if(act==="hint"){st.hint++;render();if(inputMode()==="type")focusAns()}
+  else if(act==="giveup"){stopRec();setResult("ng");st.ph="revealed";render()}
+  else if(act==="reveal-self"){st.ph="selfcheck";render()}
+  else if(act==="self"){setResult(b.dataset.v==="ok"?(st.hint?"hint":"ok"):"ng");st.ph="checked";render()}
+  else if(act==="override"){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
+  else if(act==="mic"){
+    if(st.ph==="listening"){stopRec();return}
+    st.ph="listening";render();
+    const r=await listen(t=>{const h=document.getElementById("heard");if(h)h.textContent=t});
+    if(r.err&&micBlocked){banner="この画面ではマイクが使えなかったので、「自分で判定」に切り替えました。";st.ph="ready";render();return}
+    const said=r.said||[];st.heard=said[0]||"";
+    st.via="voice";
+    if(passes(said,stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
+    else{st.ph="retry";render()}
+  }
+});
+function focusAns(){const el=document.getElementById("ans");if(el){el.focus();const n=el.value.length;try{el.setSelectionRange(n,n)}catch(e){}}}
+function typeCheck(){const v=(document.getElementById("ans")?.value||"").trim();if(!v){focusAns();return}
+  st.typed=v;st.heard=v;st.via="type";
+  if(passes([v],stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
+  else{st.ph="retry";render();focusAns()}}
+app.addEventListener("input",e=>{if(e.target.id==="ans"&&st)st.typed=e.target.value});
+app.addEventListener("keydown",e=>{if(e.target.id==="ans"&&e.key==="Enter"&&!e.isComposing){e.preventDefault();typeCheck()}});
+function stopRec(){if(recCtl)recCtl.stop();else{try{rec&&rec.stop()}catch(e){}}}
+render();
+</script>
+</body>
+</html>
