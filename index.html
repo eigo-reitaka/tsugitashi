@@ -51,6 +51,9 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .glass{background:var(--bg);border:1px solid var(--line);border-radius:var(--r)}
 .small{font-size:12.5px;color:var(--muted);margin:0}
 .foot{color:var(--muted);font-size:12px;text-align:center;padding-bottom:28px;margin:0}
+.banner.safari{display:flex;flex-direction:column;gap:6px;color:var(--ink);background:var(--tint1)}
+.banner.safari span{color:var(--muted)}
+.banner.safari .sbtns{color:var(--ink);display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
 .banner{font-size:13px;border-radius:12px;padding:10px 14px;color:var(--muted);background:var(--soft)}
 .chipbtn,.seg button,.pill,.scount,.way .wh .small{white-space:nowrap;flex-shrink:0}
 
@@ -177,7 +180,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .hrow.next .q{font-weight:700}
 .hrow.next .pill{background:var(--accent);color:var(--accent-ink)}
 .chip.ok{color:var(--ok)}.chip.hint{color:var(--hint)}.chip.ng{color:var(--ng)}
-.chipbtn{border:1px solid var(--ink);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:500}
+.chipbtn{display:inline-block;text-decoration:none;color:inherit;border:1px solid var(--ink);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:500}
 .setting{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 .seg{display:inline-flex;align-self:center;padding:3px;border-radius:999px;gap:2px;background:var(--soft);border:1px solid var(--line2)}
 .seg button{padding:7px 15px;border-radius:999px;font-size:12.5px;font-weight:500;color:var(--muted)}
@@ -543,7 +546,11 @@ function speak(text){
   speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=store.settings.rate;if(voice)u.voice=voice;speechSynthesis.speak(u);
 }
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-let micBlocked=!SR;
+/* iPhoneでSafari以外（Chrome・LINEの中など）は、ブラウザ側の都合で声の聞き取りが動かない */
+const UA=navigator.userAgent||"";
+const IOS=/iPhone|iPad|iPod/.test(UA)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const IOS_OTHER=IOS&&/CriOS|FxiOS|EdgiOS|OPiOS|GSA\/|Line\/|Instagram|FBAN|FBAV/.test(UA);
+let micBlocked=!SR||IOS_OTHER;
 const inputMode=()=>store.settings.input==="type"?"type":"voice";
 function judgeMode(){return(store.settings.judge==="mic"&&!micBlocked)?"mic":"self"}
 let rec=null;
@@ -879,6 +886,9 @@ function lastRes(id){return store.sets[id]?.last?.res||null}
 function curLevel(){const open=LEVELS.filter(l=>l.ids.length);return(open.find(l=>l.ids.some(id=>lastRes(id)!=="ok"))||open[open.length-1]).n}
 function navTop(title,sub,back="home"){return`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">${esc(title)}${sub?`<small>${esc(sub)}</small>`:""}</div><span style="width:40px"></span></header>`}
 
+function safariNote(){if(!IOS_OTHER)return"";const ok=location.protocol==="https:";
+  return`<div class="banner safari"><b>iPhoneのChromeやLINEの中では、声の判定が使えません</b><span>Safariで開くと、声で練習できます。このままでも、タイピングや「自分で判定」で進められます。</span>
+  <span class="sbtns">${ok?`<a class="chipbtn" href="x-safari-${esc(location.href.split("#")[0])}">Safariで開く</a>`:""}<button class="chipbtn" data-act="copyurl">URLをコピー</button></span></div>`}
 function renderHome(){
   const cur=curLevel();
   const cards=LEVELS.map(l=>{const ok=l.ids.filter(id=>lastRes(id)==="ok").length,m=l.name.match(/^(.*?) (レベル\d)$/);
@@ -890,6 +900,7 @@ function renderHome(){
       <span class="chev">${IC.chev}</span></button>`}).join("");
   const WIC=[IC.pin,IC.at,IC.target,IC.link,IC.user];
   app.innerHTML=`<header class="top"><div class="brand"><span class="logo"><i></i><i></i><i></i></span><b>つぎ足し英作文</b></div><button class="recbtn" data-act="go" data-v="record" aria-label="学習記録"><span class="round">${IC.chart}</span><small>学習記録</small></button></header>
+  ${safariNote()}
   <section class="steps"><div class="sechead"><b>ステップ1から順番に練習しよう</b></div>${cards}</section>
   <section class="cats-row"><div class="sechead"><b>後ろから情報を足す5つのパターン</b></div>
     <div class="iconrow">${WAYS.map((w,i)=>`<button data-act="pattern" data-v="${i}">${WIC[i]}<span>${esc(w.short).replace("\n","<br>")}</span></button>`).join("")}</div></section>
@@ -899,7 +910,7 @@ function renderHome(){
     <button class="row" data-act="go" data-v="tests"><span class="ic">${IC.check}</span><span><b>ステップごとの確認テスト</b><span>ステップ1〜5、それぞれ5問。ヒントなしで全文を言えるか確かめよう</span></span><span class="chev">${IC.chev}</span></button>
     <button class="row" data-act="test2"><span class="ic">${IC.check}</span><span><b>総合確認テスト</b><span>ステップ5まで終わったら挑戦しよう！毎回ちがう問題が出ます</span></span><span class="chev">${IC.chev}</span></button>
   </div>
-  ${micBlocked&&store.settings.judge==="mic"?`<div class="banner">この画面ではマイクが使えないため、「自分で判定」で進みます。</div>`:""}
+  ${micBlocked&&!IOS_OTHER&&store.settings.judge==="mic"?`<div class="banner">この画面ではマイクが使えないため、「自分で判定」で進みます。</div>`:""}
   <p class="foot">たかしとれいちゃんの英語日和</p>`;
 }
 
@@ -1106,6 +1117,7 @@ function renderPractice(){
   <section class="glass stage">${promptHTML(set,s)}${stage}</section>
   ${under}
   ${banner?`<div class="banner">${esc(banner)}</div>`:""}
+  ${inputMode()==="voice"&&st.si===0?safariNote():""}
   <div class="dock">${dock}</div>`;
 }
 
@@ -1177,6 +1189,9 @@ app.addEventListener("click",async e=>{
   else if(act==="reveal-self"){st.ph="selfcheck";render()}
   else if(act==="self"){setResult(b.dataset.v==="ok"?(st.hint?"hint":"ok"):"ng");st.ph="checked";render()}
   else if(act==="override"){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
+  else if(act==="copyurl"){const url=location.href.split("#")[0];
+    const done=()=>{b.textContent="コピーしました"};
+    try{navigator.clipboard.writeText(url).then(done,()=>prompt("このURLをコピーして、Safariに貼り付けてください",url))}catch(e){prompt("このURLをコピーして、Safariに貼り付けてください",url)}}
   else if(act==="mic"){
     if(st.ph==="listening"){stopRec();return}
     st.ph="listening";render();
@@ -1208,7 +1223,7 @@ function renderIntro(){
      viz:`<ol class="in-steps"><li><b>英語にする</b><span>結論の文だけを英語で言う</span></li><li><b>後ろに足す</b><span>情報を1つずつ足していく</span></li><li><b>通しで言う</b><span>最後に、最初から全部言う</span></li></ol>`,
      b:`<p>声に出すか、タイピングかは最初の問題で選べます。</p><p>分からないときは、ヒントや「答えを見る」を使って大丈夫です。</p>`},
     {t:"声で練習するときの注意",
-     viz:`<ul class="in-notes"><li><b>Safari か Chrome で開く</b><span>LINEやInstagramの中で開くと、マイクが使えないことがあります</span></li><li><b>マイクは「許可」を押す</b><span>最初に聞かれたら「許可」。間違えて断ったときは、ブラウザの設定で許可に戻せます</span></li><li><b>iPhoneは「音声入力」をオンに</b><span>設定 →「一般」→「キーボード」→「音声入力」がオフだと、声を聞き取れません</span></li><li><b>電波のよい場所で</b><span>声の聞き取りにはインターネットを使います</span></li></ul>`,
+     viz:`<ul class="in-notes"><li><b>iPhoneはSafari、AndroidはChromeで開く</b><span>iPhoneのChromeや、LINE・Instagramの中で開くと、声の判定が使えません</span></li><li><b>マイクは「許可」を押す</b><span>最初に聞かれたら「許可」。間違えて断ったときは、ブラウザの設定で許可に戻せます</span></li><li><b>iPhoneは「音声入力」をオンに</b><span>設定 →「一般」→「キーボード」→「音声入力」がオフだと、声を聞き取れません</span></li><li><b>電波のよい場所で</b><span>声の聞き取りにはインターネットを使います</span></li></ul>`,
      b:`<p>うまく反応しないときは、タイピングで練習するか、「自分で判定」に切り替えても進められます。</p>`},
     {t:"おすすめの進め方",
      viz:`<ol class="in-steps"><li><b>ステップ1から順番に</b><span>今いるステップに「いまここ」が付きます</span></li><li><b>ステップごとの確認テスト</b><span>ヒントなしで、一発で全文を言えるか確かめる</span></li><li><b>学習記録で復習</b><span>止まったところから、もう一度練習できます</span></li></ol>`,
