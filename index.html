@@ -455,15 +455,37 @@ let micBlocked=!SR;
 const inputMode=()=>store.settings.input==="type"?"type":"voice";
 function judgeMode(){return(store.settings.judge==="mic"&&!micBlocked)?"mic":"self"}
 let rec=null;
+/* 聞き取り：PCのChromeは少し間が空くとすぐ止まるため、続けて聞き取り、
+   話し終わってから約2秒黙るか、ボタンをもう一度押したら判定する。
+   何も話さないまま止まった場合は、最大10秒まで自動で聞き直す。最長20秒。 */
+let recCtl=null;
 function listen(onInterim){
   return new Promise(resolve=>{
-    let finals=[],err=null;
-    try{rec=new SR();rec.lang="en-US";rec.interimResults=true;rec.maxAlternatives=3;rec.continuous=false}catch(e){micBlocked=true;resolve({err:"unsupported"});return}
-    rec.onresult=e=>{const alts=[];let interim="";for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];interim+=r[0].transcript;if(r.isFinal)for(let k=0;k<r.length;k++)alts.push(r[k].transcript)}
-      if(alts.length)finals=alts;onInterim&&onInterim(interim)};
-    rec.onerror=e=>{err=e.error};
-    rec.onend=()=>{rec=null;if(err&&["not-allowed","service-not-allowed","audio-capture"].includes(err))micBlocked=true;resolve({said:finals,err})};
-    try{rec.start()}catch(e){micBlocked=true;resolve({err:"start"})}
+    const t0=Date.now();let parts=[],alts=[],interim="",err=null,done=false,silence=null,userStop=false;
+    const said=()=>{const main=(parts.join(" ")+" "+interim).trim();const out=main?[main]:[];
+      if(alts.length&&parts.length<=1)alts.forEach(a=>{const x=(a+" "+interim).trim();if(x&&!out.includes(x))out.push(x)});return out};
+    const finish=()=>{if(done)return;done=true;clearTimeout(silence);clearTimeout(cap);recCtl=null;rec=null;
+      if(err&&["not-allowed","service-not-allowed","audio-capture"].includes(err))micBlocked=true;resolve({said:said(),err})};
+    const stopNow=()=>{userStop=true;try{rec&&rec.stop()}catch(e){finish()}};
+    const cap=setTimeout(stopNow,20000);
+    recCtl={stop:stopNow};
+    const start=()=>{
+      try{rec=new SR();rec.lang="en-US";rec.interimResults=true;rec.maxAlternatives=3;rec.continuous=true}catch(e){micBlocked=true;err="unsupported";finish();return}
+      rec.onresult=ev=>{interim="";for(let i=ev.resultIndex;i<ev.results.length;i++){const r=ev.results[i];
+          if(r.isFinal){parts.push(r[0].transcript.trim());alts=[...r].map(x=>x.transcript.trim())}else interim+=r[0].transcript}
+        onInterim&&onInterim((parts.join(" ")+" "+interim).trim());
+        clearTimeout(silence);silence=setTimeout(stopNow,2000)};
+      rec.onerror=ev=>{if(ev.error!=="no-speech"&&ev.error!=="aborted")err=ev.error};
+      rec.onend=()=>{
+        if(interim){parts.push(interim.trim());interim=""}
+        if(!userStop&&!err){
+          /* 話している途中で止まった→続きを聞く（2秒黙ると判定）／まだ何も話していない→10秒までは聞き直す */
+          if(parts.length||Date.now()-t0<10000){start();return}
+        }
+        finish()};
+      try{rec.start()}catch(e){if(!parts.length){micBlocked=true;err="start"}finish()}
+    };
+    start();
   });
 }
 
@@ -860,8 +882,8 @@ function renderPractice(){
       dock=`<button class="big lite" data-act="giveup">答えを見る</button><button class="big" data-act="typecheck">答え合わせ</button>`;
     }else if(mode==="mic"){
       const lis=st.ph==="listening";
-      stage+=`<div class="micwrap"><button class="micbtn ${lis?"listening":""}" data-act="mic" aria-label="${lis?"止める":"話す"}"><span>${IC.mic}<small>${lis?"聞いています":"話す"}</small></span></button>
-        <div class="heard" id="heard">${lis?"":st.ph==="retry"?"聞き取り：「"+esc(st.heard||"聞き取れませんでした")+"」":"押してから英語で話してください"}</div></div>`;
+      stage+=`<div class="micwrap"><button class="micbtn ${lis?"listening":""}" data-act="mic" aria-label="${lis?"止める":"話す"}"><span>${IC.mic}<small>${lis?"止めて判定":"話す"}</small></span></button>
+        <div class="heard" id="heard">${lis?"聞いています。話し終わったら少し待つか、ボタンを押してください":st.ph==="retry"?"聞き取り：「"+esc(st.heard||"聞き取れませんでした")+"」":"押してから英語で話してください"}</div></div>`;
       if(st.ph==="retry")stage+=`<div class="note hi">惜しい！もう一度、またはヒントを見てから挑戦してみよう。</div>`;
       dock=`<button class="big lite" data-act="giveup">答えを見る</button>`;
     }else{
@@ -954,7 +976,7 @@ function typeCheck(){const v=(document.getElementById("ans")?.value||"").trim();
   else{st.ph="retry";render();focusAns()}}
 app.addEventListener("input",e=>{if(e.target.id==="ans"&&st)st.typed=e.target.value});
 app.addEventListener("keydown",e=>{if(e.target.id==="ans"&&e.key==="Enter"&&!e.isComposing){e.preventDefault();typeCheck()}});
-function stopRec(){try{rec&&rec.stop()}catch(e){}}
+function stopRec(){if(recCtl)recCtl.stop();else{try{rec&&rec.stop()}catch(e){}}}
 render();
 </script>
 </body>
