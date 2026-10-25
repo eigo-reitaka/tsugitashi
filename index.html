@@ -51,6 +51,14 @@ body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.65;
     linear-gradient(180deg,var(--sky1),var(--sky2));
   background-attachment:fixed;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#app{word-break:keep-all;overflow-wrap:break-word;line-break:strict}
+#app p,.small,.note,.sub,.cat .en,.tile span span{text-wrap:pretty}
+.grp{display:inline-flex;align-items:flex-end;gap:6px;max-width:100%}
+.answer .en{text-wrap:balance}
+.chipbtn,.way .wh .small,.seg button,.pill,.step .right span{white-space:nowrap;flex-shrink:0}
+.ways .w span{white-space:nowrap}
+.cat .nm{align-items:flex-start}.cat .nm i{margin-top:7px;flex-shrink:0}
+@media (max-width:400px){.tile{flex-direction:column;align-items:flex-start;gap:6px}}
 .wrap{max-width:440px;margin:0 auto;padding-block:16px 0;display:flex;flex-direction:column;gap:14px;min-height:100vh}
 button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
@@ -621,6 +629,8 @@ const IC={
 const TY=k=>TYPES[k]||{l:"",c:"--t-core"};
 function chunk(t,txt,{isNew=false,jp=false,ghost=false}={}){const T=TY(t);return`<span class="chunk${isNew?" new":""}${jp?" jp":""}${ghost?" ghost":""}" style="--c:var(${T.c})"><span class="tag">${T.l}</span><span class="txt${jp?"":" en"}">${esc(txt)}</span></span>`}
 const PLUS='<span class="plus">+</span>';
+/* 「+」と次のかたまりを1つにまとめ、行末に「+」だけ残らないようにする */
+const plusChunk=(t,txt,o)=>'<span class="grp">'+PLUS+chunk(t,txt,o)+'</span>';
 let view="home",sess=null,st=null,banner="",lvView=1;
 
 const lvIds=n=>SETS.filter(s=>s.lv===n).map(s=>s.id);
@@ -636,13 +646,25 @@ const catName=set=>isTest()?(sess.mode==="t1"?"確認テスト1":"確認テス�
 function dispText(set,i){/* i=-1:結論の文 */const t=i<0?strip(set.core):set.adds[i].en;const nx=set.adds[i+1];return nx&&COMMA.has(nx.t)?t+",":t}
 const WAYS=[
   {t:"place",short:"どこで\nいつ",name:"どこで・いつ",lv:"ステップ2",ex:[[["core","I had breakfast"],["place","at the hotel"],["time","this morning."]]]},
-  {t:"with",short:"前置詞\n系",name:"前置詞で足す（with / by / for / about / from など）",lv:"ステップ2",ex:[[["core","I talked with my friend"],["about","about our trip."]],[["core","I got a letter"],["from","from a friend."]],[["core","I'm traveling"],["with","with my daughter."]],[["core","I went to the airport"],["by","by train."]],[["core","I'm staying at this hotel"],["for","for three days."]]]},
+  {t:"with",short:"前置詞",name:"前置詞で足す（with / by / for / about / from など）",lv:"ステップ2",ex:[[["core","I talked with my friend"],["about","about our trip."]],[["core","I got a letter"],["from","from a friend."]],[["core","I'm traveling"],["with","with my daughter."]],[["core","I went to the airport"],["by","by train."]],[["core","I'm staying at this hotel"],["for","for three days."]]]},
   {t:"purpose",short:"何の\nために",name:"何のために（to＋動詞）",lv:"ステップ2",ex:[[["core","I went to the cafe"],["purpose","to meet a friend."]]]},
-  {t:"reason",short:"話を\nつなぐ",name:"話をつなぐ（接続詞）",lv:"ステップ3",ex:[[["core","I like the shirt,"],["reason","but it's a little big."]],[["core","I'm learning English"],["reason","because I like traveling."]],[["core","Let's have coffee"],["cond","if you have time."]]]},
+  {t:"reason",short:"話を\nつなぐ",name:"話をつなぐ（接続詞）",lv:"ステップ3",ex:[[["core","I like the shirt,"],["but","but it's a little big."]],[["core","I'm learning English"],["because","because I like traveling."]],[["core","Let's have coffee"],["if","if you have time."]]]},
   {t:"desc",short:"人・物の\n説明",name:"人・物を説明する（that / who）",lv:"ステップ4",ex:[[["core","I know a cafe"],["desc","that has good coffee."]],[["core","I have a friend"],["desc","who loves traveling."]]]}
 ];
 
-function render(){({home:renderHome,level:renderLevel,record:renderRecord,library:renderLibrary,practice:renderPractice,summary:renderSummary}[view])()}
+function render(){({home:renderHome,level:renderLevel,record:renderRecord,library:renderLibrary,practice:renderPractice,summary:renderSummary}[view])();addWbr(app)}
+/* 日本語を文節のまとまりで改行させる：ひらがなの後に漢字・カタカナ・英数字・かっこが来る位置と、「・」「／」の後に改行候補を入れる。
+   CSSの word-break:keep-all と組み合わせて、単語の途中で折り返さないようにする */
+const RE_H=/[\u3041-\u309F]/,RE_NEXT=/[\u4E00-\u9FFF\u3005\u30A0-\u30FFA-Za-z0-9（「]/,RE_AFTER=/[・／]/;
+function addWbr(root){
+  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];
+  while(w.nextNode()){const n=w.currentNode;if(n.parentElement.closest("input,textarea,script,style"))continue;if(/[\u3041-\u30FF\u4E00-\u9FFF]/.test(n.data))nodes.push(n)}
+  for(const n of nodes){const s=n.data;const cut=[];
+    for(let i=1;i<s.length;i++){if((RE_H.test(s[i-1])&&RE_NEXT.test(s[i]))||RE_AFTER.test(s[i-1]))cut.push(i)}
+    if(!cut.length)continue;const f=document.createDocumentFragment();let p=0;
+    for(const c of cut){f.append(s.slice(p,c),document.createElement("wbr"));p=c}
+    f.append(s.slice(p));n.replaceWith(f)}
+}
 function lastRes(id){return store.sets[id]?.last?.res||null}
 function curLevel(){const open=LEVELS.filter(l=>l.ids.length);return(open.find(l=>l.ids.some(id=>lastRes(id)!=="ok"))||open[open.length-1]).n}
 function navTop(title,sub,back="home"){return`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">${esc(title)}${sub?`<small>${esc(sub)}</small>`:""}</div><span style="width:40px"></span></header>`}
@@ -651,8 +673,8 @@ function renderHome(){
   const cur=curLevel();const q=buildToday();const first=BYID[q[0]];const started=Object.keys(store.sets).length>0;
   const stairs=LEVELS.slice().reverse().map(l=>{
     const locked=!l.ids.length;const ok=l.ids.filter(id=>lastRes(id)==="ok").length;
-    const off=(l.n-1)*16;
-    return`<button class="step glass ${l.n===cur?"cur":""} ${locked?"lock":""}" style="--off:${off}px" ${locked?"disabled":`data-act="level" data-v="${l.n}"`}>
+    const off=`calc(${l.n-1} * min(16px, 3.5vw))`;
+    return`<button class="step glass ${l.n===cur?"cur":""} ${locked?"lock":""}" style="--off:${off}" ${locked?"disabled":`data-act="level" data-v="${l.n}"`}>
       <span style="min-width:0"><span class="num"><b>${l.n}</b><span>${esc(l.name)}</span></span><span class="sub" style="display:block">${esc(l.sub)}</span>
       ${locked?"":`<span class="bar">${l.ids.map(id=>`<i class="${lastRes(id)||""}"></i>`).join("")}</span>`}</span>
       <span class="right">${locked?`<span class="lockico">${IC.lock}</span>準備中`:`${l.n===cur?'<span class="pill">いまここ</span>':""}<span>${ok} / ${l.ids.length}</span>`}</span></button>`}).join("");
@@ -701,7 +723,7 @@ function renderLibrary(){
   <div class="qhead"><h2>後ろから情報を足す5つのパターン</h2></div>
   <p class="small" style="text-align:center">まず短く言って、後ろに足す。▶で英文を聞けます。</p>
   ${WAYS.map((w,i)=>`<section class="way" style="--c:var(${TY(w.t).c})"><div class="wh"><b>${i+1}．${esc(w.name)}</b><span class="small">${w.lv}</span></div>
-    ${w.ex.map(ex=>{const full=ex.map(p=>p[1]).join(" ");return`<div class="ex">${ex.map((p,j)=>(j?PLUS:"")+chunk(p[0],p[1])).join("")}<button class="play" data-act="play" data-t="${esc(full)}" aria-label="再生">${IC.spk}</button></div>`}).join("")}
+    ${w.ex.map(ex=>{const full=ex.map(p=>p[1]).join(" ");return`<div class="ex">${ex.map((p,j)=>{const h=j?plusChunk(p[0],p[1]):chunk(p[0],p[1]);return j===ex.length-1?`<span class="grp">${h}<button class="play" data-act="play" data-t="${esc(full)}" aria-label="再生">${IC.spk}</button></span>`:h}).join("")}</div>`}).join("")}
   </section>`).join("")}
   <p class="foot">それぞれの練習は、ホームのステップから選べます</p>`;
 }
@@ -777,8 +799,8 @@ function builtHTML(){
   const parts=[chunk("core",dispText(set,-1),{isNew:s.k==="core"})];
   set.adds.forEach((a,i)=>{
     const shown=(s.k==="add"&&(i<s.i||(i===s.i&&done)))||s.k==="full";
-    if(shown)parts.push(PLUS+chunk(a.t,dispText(set,i),{isNew:s.k==="add"&&i===s.i}));
-    else if(s.k==="add"&&i===s.i)parts.push(PLUS+chunk(a.t,a.jp,{jp:true,ghost:true}));
+    if(shown)parts.push(plusChunk(a.t,dispText(set,i),{isNew:s.k==="add"&&i===s.i}));
+    else if(s.k==="add"&&i===s.i)parts.push(plusChunk(a.t,a.jp,{jp:true,ghost:true}));
   });
   return`<div class="sent">${parts.join("")}</div>`;
 }
@@ -803,7 +825,7 @@ function renderPractice(){
     dock=`<button class="big" data-act="next" ${solved?"":"disabled"}>${solved?"英語にしてみる":"結論を選んでください"}</button>`;
   }else if(s.k==="preview"){
     h2="結論の文が言えました";sub="残りは、後ろに足していく情報です";
-    stage=`<div class="sent">${chunk("core",strip(set.core))}${set.adds.map(a=>PLUS+chunk(a.t,a.jp,{jp:true,ghost:true})).join("")}</div>
+    stage=`<div class="sent">${chunk("core",strip(set.core))}${set.adds.map(a=>plusChunk(a.t,a.jp,{jp:true,ghost:true})).join("")}</div>
       <div class="note">点線の部分は、ステップ2以降で英語にして後ろに足していきます。</div>
       <div class="answer"><button class="play" data-act="play" data-t="${esc(set.core)}">${IC.spk}お手本</button></div>`;
     dock=`<button class="big" data-act="finishSet">${sess.i+1<sess.ids.length?"次の問題へ":"結果を見る"}</button>`;
