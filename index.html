@@ -227,12 +227,15 @@ const TYPES={
   reason:{l:"なぜ",c:"--t-reason"}, cond:{l:"どんなとき",c:"--t-cond"},
   and:{l:"そして",c:"--t-by"}, but:{l:"でも",c:"--t-for"}, so:{l:"だから",c:"--t-time"},
   because:{l:"なぜなら",c:"--t-reason"}, when:{l:"〜とき",c:"--t-cond"}, if:{l:"もし",c:"--t-cond"},
-  that:{l:"どんな（that）",c:"--t-desc"}, who:{l:"どんな人（who）",c:"--t-desc"}
+  that:{l:"どんな（that）",c:"--t-desc"}, who:{l:"どんな人（who）",c:"--t-desc"},
+  about:{l:"〜について",c:"--t-with"}, from:{l:"〜から",c:"--t-place"}, to:{l:"〜に（相手）",c:"--t-by"},
+  before:{l:"〜の前に",c:"--t-time"}, after:{l:"〜の後に",c:"--t-time"}, until:{l:"〜まで",c:"--t-for"}, without:{l:"〜なしで",c:"--t-purpose"}
 };
 const COMMA=new Set(["and","but","so"]);
 const CATS={
   2:[{k:"place",name:"どこで",en:"at the hotel"},{k:"time",name:"いつ",en:"this morning"},{k:"with",name:"誰と（with）",en:"with my daughter"},
-     {k:"by",name:"何で（by）",en:"by train"},{k:"for",name:"どのくらい（for）",en:"for three days"},{k:"purpose",name:"何のために（to）",en:"to meet a friend"}],
+     {k:"by",name:"何で（by）",en:"by train"},{k:"for",name:"どのくらい（for）",en:"for three days"},{k:"purpose",name:"何のために（to）",en:"to meet a friend"},
+     {k:"prep",name:"前置詞いろいろ",en:"about / from / to / before / after / until"}],
   3:[{k:"and",name:"and（そして）",en:"and I drank some coffee"},{k:"but",name:"but（でも）",en:"but it's a little big"},{k:"so",name:"so（だから）",en:"so I'll take a break"},
      {k:"because",name:"because（なぜなら）",en:"because I like traveling"},{k:"when",name:"when（〜とき）",en:"when I speak English"},{k:"if",name:"if（もし）",en:"if you have time"}],
   4:[{k:"that",name:"that（物の説明）",en:"that I tried on"},{k:"who",name:"who（人の説明）",en:"who loves traveling"}],
@@ -293,6 +296,16 @@ S("2-o2",2,"purpose","お土産を買うために、このお店に来ました�
 S("2-o3",2,"purpose","英語を練習するために、この動画を見ています。","この動画を見ています。","I'm watching this video.",[],["見ている = watching"],[A("purpose","英語を練習するために","to practice English")]),
 S("2-o4",2,"purpose","来月、娘に会うためにカナダに行きます。","カナダに行きます。","I'm going to Canada.",["I'll go to Canada.","I will go to Canada."],["行く = go"],[A("time","来月","next month"),A("purpose","娘に会うために","to see my daughter",["to meet my daughter","to visit my daughter"])]),
 S("2-o5",2,"purpose","写真を撮るために、早く起きました。","早く起きました。","I got up early.",["I woke up early."],["起きた = got up","早く = early"],[A("purpose","写真を撮るために","to take pictures",["to take photos","to take some pictures"])]),
+S("2-x1",2,"prep","友達と旅行について話しました。","友達と話しました。","I talked with my friend.",["I talked to my friend.","I spoke with my friend.","I talked with a friend."],["話した = talked"],[A("about","旅行について","about our trip",["about the trip","about my trip"])]),
+S("2-x2",2,"prep","日本の文化についての本を読んでいます。","本を読んでいます。","I'm reading a book.",[],["読んでいる = reading"],[A("about","日本の文化についての","about Japanese culture")]),
+S("2-x3",2,"prep","友達から手紙をもらいました。","手紙をもらいました。","I got a letter.",["I received a letter."],["もらった = got"],[A("from","友達から","from a friend",["from my friend"])]),
+S("2-x4",2,"prep","9時から5時まで働きます。","働きます。","I work.",[],["働く = work"],[A("from","9時から","from nine"),A("until","5時まで","to five",["until five","till five"])]),
+S("2-x5",2,"prep","母にメッセージを送りました。","メッセージを送りました。","I sent a message.",[],["送った = sent"],[A("to","母に","to my mother",["to my mom"])]),
+S("2-x6",2,"prep","寝る前に本を読みます。","本を読みます。","I read a book.",["I read books."],["読む = read"],[A("before","寝る前に","before bed",["before I go to bed","before going to bed","before sleeping"])]),
+S("2-x7",2,"prep","仕事の後にジムに行きました。","ジムに行きました。","I went to the gym.",[],["行った = went"],[A("after","仕事の後に","after work")]),
+S("2-x8",2,"prep","夕方まで公園にいました。","公園にいました。","I was at the park.",["I stayed at the park.","I was in the park.","I stayed in the park."],["いた = was"],[A("until","夕方まで","until the evening",["until evening","till evening","till the evening"])]),
+S("2-x9",2,"prep","机の上に鍵を置きました。","鍵を置きました。","I put my keys.",["I put the keys.","I put my key.","I left my keys."],["置いた = put","鍵 = keys"],[A("place","机の上に","on the desk",["on the table"])]),
+S("2-x10",2,"prep","砂糖なしでコーヒーを飲みます。","コーヒーを飲みます。","I drink coffee.",["I have coffee."],["飲む = drink"],[A("without","砂糖なしで","without sugar")]),
 /* ---- レベル3：接続詞で話をつなぐ ---- */
 S("3-a1",3,"and","朝ごはんを食べて、コーヒーも飲みました。","朝ごはんを食べました。","I had breakfast.",["I ate breakfast."],["朝ごはん = breakfast","食べた = had"],[A("and","コーヒーも飲んだ","and I drank some coffee",["and I had some coffee","and I drank coffee","and I had coffee"])]),
 S("3-a2",3,"and","日本から来ていて、娘と旅行しています。","日本から来ました。","I'm from Japan.",["I am from Japan."],["〜から来た = I'm from"],[A("and","娘と旅行している","and I'm traveling with my daughter")]),
@@ -602,7 +615,7 @@ const catName=set=>isTest()?(sess.mode==="t1"?"確認テスト1":"確認テス�
 function dispText(set,i){/* i=-1:結論の文 */const t=i<0?strip(set.core):set.adds[i].en;const nx=set.adds[i+1];return nx&&COMMA.has(nx.t)?t+",":t}
 const WAYS=[
   {t:"place",short:"どこで\nいつ",name:"どこで・いつ",lv:"ステップ2",ex:[[["core","I had breakfast"],["place","at the hotel"],["time","this morning."]]]},
-  {t:"with",short:"with\nby・for",name:"前置詞で足す（with / by / for）",lv:"ステップ2",ex:[[["core","I'm traveling"],["with","with my daughter."]],[["core","I went to the airport"],["by","by train."]],[["core","I'm staying at this hotel"],["for","for three days."]]]},
+  {t:"with",short:"前置詞\n系",name:"前置詞で足す（with / by / for / about / from など）",lv:"ステップ2",ex:[[["core","I talked with my friend"],["about","about our trip."]],[["core","I got a letter"],["from","from a friend."]],[["core","I'm traveling"],["with","with my daughter."]],[["core","I went to the airport"],["by","by train."]],[["core","I'm staying at this hotel"],["for","for three days."]]]},
   {t:"purpose",short:"何の\nために",name:"何のために（to＋動詞）",lv:"ステップ2",ex:[[["core","I went to the cafe"],["purpose","to meet a friend."]]]},
   {t:"reason",short:"話を\nつなぐ",name:"話をつなぐ（接続詞）",lv:"ステップ3",ex:[[["core","I like the shirt,"],["reason","but it's a little big."]],[["core","I'm learning English"],["reason","because I like traveling."]],[["core","Let's have coffee"],["cond","if you have time."]]]},
   {t:"desc",short:"人・物の\n説明",name:"人・物を説明する（that / who）",lv:"ステップ4",ex:[[["core","I know a cafe"],["desc","that has good coffee."]],[["core","I have a friend"],["desc","who loves traveling."]]]}
@@ -789,7 +802,7 @@ function renderPractice(){
       dock=`<button class="big lite" data-act="self" data-v="ng">言えなかった</button><button class="big" data-act="self" data-v="ok">言えた</button>`;
     }else if(inputMode()==="type"){
       stage+=`<div class="typewrap"><label class="small" for="ans">英語で入力してください</label>
-        <input id="ans" class="en" type="text" value="${esc(st.typed||"")}" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" lang="en" enterkeyhint="done" placeholder="${s.k==="add"?"続きだけでも、最初からでもOK":"例：I had …"}"></div>`;
+        <input id="ans" class="en" type="text" value="${esc(st.typed||"")}" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" lang="en" enterkeyhint="done" placeholder="${s.k==="add"?"続きだけでも、最初からでもOK":""}"></div>`;
       if(st.ph==="retry")stage+=`<div class="note hi">惜しい！足りない単語か、違う単語があります。直してもう一度。</div>`;
       dock=`<button class="big lite" data-act="giveup">答えを見る</button><button class="big" data-act="typecheck">答え合わせ</button>`;
     }else if(mode==="mic"){
