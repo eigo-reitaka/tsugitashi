@@ -422,11 +422,11 @@ const BYID=Object.fromEntries(SETS.map(s=>[s.id,s]));
 const PRACTICE=SETS;
 /* ステップごとの確認テスト（各5問・固定）。練習には出ない問題。日本語を見て、そのステップの形で全文を言う */
 const STEP_TESTS={
- 1:[S("K1-1",1,"test","昨日、友達とカフェでケーキを食べました。","ケーキを食べました。","I had cake.",["I ate cake.","I had some cake.","I ate some cake.","I had the cake.","I ate the cake."],[],[]),
-    S("K1-2",1,"test","来月、家族と沖縄に行きます。","沖縄に行きます。","I'm going to Okinawa.",["I'll go to Okinawa.","I will go to Okinawa."],[],[]),
-    S("K1-3",1,"test","駅の近くにある本屋を探しています。","本屋を探しています。","I'm looking for a bookstore.",["I'm looking for a bookshop.","I'm looking for a book store."],[],[]),
-    S("K1-4",1,"test","雨が降っていたので、タクシーに乗りました。","タクシーに乗りました。","I took a taxi.",["I got a taxi.","I took the taxi."],[],[]),
-    S("K1-5",1,"test","毎朝、公園で犬と散歩します。","散歩します。","I take a walk.",["I walk.","I go for a walk."],[],[])],
+ 1:[S("K1-1",1,"test","昨日、友達とカフェでケーキを食べました。","ケーキを食べました。","I had cake.",["I ate cake.","I had some cake.","I ate some cake.","I had the cake.","I ate the cake."],[],[A("with","友達と","with a friend",["with my friend"]),A("place","カフェで","at a cafe",["at the cafe"]),A("time","昨日","yesterday")]),
+    S("K1-2",1,"test","来月、家族と沖縄に行きます。","沖縄に行きます。","I'm going to Okinawa.",["I'll go to Okinawa.","I will go to Okinawa."],[],[A("with","家族と","with my family"),A("time","来月","next month")]),
+    S("K1-3",1,"test","駅の近くにある本屋を探しています。","本屋を探しています。","I'm looking for a bookstore.",["I'm looking for a bookshop.","I'm looking for a book store."],[],[A("that","駅の近くにある","that is near the station",["that's near the station","near the station"])]),
+    S("K1-4",1,"test","雨が降っていたので、タクシーに乗りました。","タクシーに乗りました。","I took a taxi.",["I got a taxi.","I took the taxi."],[],[A("because","雨が降っていたから","because it was raining")]),
+    S("K1-5",1,"test","毎朝、公園で犬と散歩します。","散歩します。","I take a walk.",["I walk.","I go for a walk."],[],[A("with","犬と","with my dog"),A("place","公園で","in the park"),A("time","毎朝","every morning")])],
  2:[S("K2-1",2,"test","昨日、駅で友達に会いました。","友達に会いました。","I met a friend.",["I met my friend.","I saw a friend."],[],[A("place","駅で","at the station"),A("time","昨日","yesterday")]),
     S("K2-2",2,"test","毎週末、家族と公園に行きます。","公園に行きます。","I go to the park.",[],[],[A("with","家族と","with my family"),A("time","毎週末","every weekend")]),
     S("K2-3",2,"test","地下鉄で美術館に行きました。","美術館に行きました。","I went to the museum.",["I went to the art museum."],[],[A("by","地下鉄で","by subway",["by metro","by train"])]),
@@ -1030,7 +1030,7 @@ function renderPractice(){
   }else{
     if(s.k==="core"){h2="結論の文を英語で";sub=""}
     if(s.k==="add"){const a=set.adds[s.i];h2="後ろに「"+a.jp+"」を足そう";sub=TY(a.t).l+"を足す　"+(s.i+1)+" / "+set.adds.length}
-    if(s.k==="full"){h2=isTest()?(sess.mode==="st1"?"結論だけを英語で言おう":"英語で言ってみよう"):"最初から通して言おう";sub=isTest()?(sess.mode==="st1"?"いつ・どこで・どんな、は後回し":"まず結論を言って、後ろに足していく"):"ヒントなしで挑戦"}
+    if(s.k==="full"){h2=isTest()?"英語で言ってみよう":"最初から通して言おう";sub=isTest()?"日本語を見て、一発で全文を言おう":"ヒントなしで挑戦"}
     if(st.ph==="choose"){h2="どうやって練習する？";sub="このあとの問題も同じ方法で進みます。右上のボタンでいつでも切り替えられます"}
     const hl=hintList(),hs=hl.slice(0,st.hint).map(h=>`<div class="note hi">${h}</div>`).join("");
     stage=builtHTML()+hs;
