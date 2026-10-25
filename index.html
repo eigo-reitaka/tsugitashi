@@ -658,7 +658,7 @@ function render(){({home:renderHome,level:renderLevel,record:renderRecord,librar
 const RE_H=/[\u3041-\u309F]/,RE_NEXT=/[\u4E00-\u9FFF\u3005\u30A0-\u30FFA-Za-z0-9（「]/,RE_AFTER=/[・／]/;
 function addWbr(root){
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];
-  while(w.nextNode()){const n=w.currentNode;if(n.parentElement.closest("input,textarea,script,style"))continue;if(/[\u3041-\u30FF\u4E00-\u9FFF]/.test(n.data))nodes.push(n)}
+  while(w.nextNode()){const n=w.currentNode;const pe=n.parentElement;if(pe.closest("input,textarea,script,style")||getComputedStyle(pe).whiteSpace==="nowrap")continue;if(/[\u3041-\u30FF\u4E00-\u9FFF]/.test(n.data))nodes.push(n)}
   for(const n of nodes){const s=n.data;const cut=[];
     for(let i=1;i<s.length;i++){if((RE_H.test(s[i-1])&&RE_NEXT.test(s[i]))||RE_AFTER.test(s[i-1]))cut.push(i)}
     if(!cut.length)continue;const f=document.createDocumentFragment();let p=0;
