@@ -707,11 +707,12 @@ let backTo="home";
 function startSession(ids,mode="practice"){backTo=view==="practice"||view==="summary"?backTo:view;sess={ids,i:0,res:[],chosen:false,mode};startSet();view="practice";render();window.scrollTo(0,0)}
 function startSet(){
   const set=BYID[sess.ids[sess.i]];
-  const steps=isTest()?[{k:"full"}]:[{k:"pick"},{k:"core"}];
-  if(isTest()){}else if(set.lv===1)steps.push({k:"preview"});else{set.adds.forEach((a,i)=>steps.push({k:"add",i}));steps.push({k:"full"})}
+  /* ステップ1だけ「結論を選ぶ」から。ステップ2以降は英語にするところから */
+  const steps=isTest()?[{k:"full"}]:set.lv===1?[{k:"pick"},{k:"core"},{k:"preview"}]:[{k:"core"}];
+  if(!isTest()&&set.lv!==1){set.adds.forEach((a,i)=>steps.push({k:"add",i}));steps.push({k:"full"})}
   const opts=shuffle([{t:set.coreJp,ok:true},{t:set.jp,why:"full"},{t:set.adds[0].jp,why:"detail"}]);
   st={set,steps,si:0,res:{},opts,picked:[],ph:"ready",hint:0,heard:""};
-  if(steps[0].k==="full"&&!sess.chosen)st.ph="choose";
+  if(steps[0].k!=="pick"&&!sess.chosen)st.ph="choose";
 }
 const curStep=()=>st.steps[st.si];
 const DONE=["passed","revealed","checked"];
@@ -742,8 +743,8 @@ function builtHTML(){
 function tabsHTML(){
   const set=st.set,s=curStep();
   if(isTest())return`<div class="tabs glass"><span class="tab cur"><i>!</i>ヒントなしで、最初から全部言う</span></div>`;
-  const names=set.lv===1?["結論を選ぶ","英語にする","まとめ"]:["結論を選ぶ","英語にする","後ろに足す","通しで言う"];
-  const idx=k=>({pick:0,core:1,preview:2,add:2,full:3})[k];
+  const names=set.lv===1?["結論を選ぶ","英語にする","まとめ"]:["英語にする","後ろに足す","通しで言う"];
+  const idx=k=>set.lv===1?({pick:0,core:1,preview:2})[k]:({core:0,add:1,full:2})[k];
   const ci=idx(s.k);
   return`<div class="tabs glass">${names.map((n,i)=>`<span class="tab ${i<ci?"done":i===ci?"cur":""}"><i>${i<ci?"✓":i+1}</i>${n}</span>`).join("")}</div>`;
 }
