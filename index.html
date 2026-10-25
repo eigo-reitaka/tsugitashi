@@ -906,7 +906,6 @@ function renderHome(){
   <section class="cats-row"><div class="sechead col"><b>後ろから情報を足す5つのパターンの解説</b><span class="secnote">※マークを押すと解説が見れます！</span></div>
     <div class="iconrow">${WAYS.map((w,i)=>`<button data-act="pattern" data-v="${i}">${WIC[i]}<span>${esc(w.short).replace("\n","<br>")}</span></button>`).join("")}</div></section>
   <div class="rows">
-    <button class="row" data-act="go" data-v="library"><span class="ic">${IC.book}</span><span><b>5つのパターン</b><span>お手本と例文</span></span><span class="chev">${IC.chev}</span></button>
     <button class="row" data-act="mix"><span class="ic">${IC.shuf}</span><span><b>ランダム出題</b><span>全ステップをまぜて</span></span><span class="chev">${IC.chev}</span></button>
     <button class="row" data-act="go" data-v="tests"><span class="ic">${IC.check}</span><span><b>ステップごとの確認テスト</b><span>ステップ1〜5、それぞれ5問。ヒントなしで全文を言えるか確かめよう</span></span><span class="chev">${IC.chev}</span></button>
     <button class="row" data-act="test2"><span class="ic">${IC.check}</span><span><b>総合確認テスト</b><span>ステップ5まで終わったら挑戦しよう！毎回ちがう問題が出ます</span></span><span class="chev">${IC.chev}</span></button>
