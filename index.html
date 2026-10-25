@@ -93,6 +93,20 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .iconrow button:hover{color:var(--ink);border-bottom-color:var(--line)}
 
 /* ホーム：ステップのカード */
+.steps{display:flex;flex-direction:column;gap:10px}
+.step{display:grid;grid-template-columns:44px minmax(0,1fr) 18px;align-items:center;gap:12px;width:100%;text-align:left;background:var(--tint);border-radius:16px;padding:16px 14px 16px 16px;border:2px solid transparent}
+.step.cur{border-color:var(--ink)}
+.step .sno{width:44px;height:44px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-family:var(--f-en);font-weight:700;font-size:20px}
+.step .sbody{display:flex;flex-direction:column;gap:3px;min-width:0}
+.step b{font-size:16.5px;font-weight:700;line-height:1.4}
+.step .lvtag{display:inline-block;margin-left:6px;font-size:12.5px;font-weight:700;background:var(--bg);border-radius:999px;padding:1px 9px;vertical-align:2px;white-space:nowrap}
+.step .badge{align-self:flex-start;background:var(--ink);color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;margin-bottom:2px}
+.step .ssub{font-size:13px}
+.step .sprog{display:flex;align-items:center;gap:8px;margin-top:6px}
+.step .pbar{flex:1;height:5px;border-radius:3px;background:rgba(0,0,0,.08);overflow:hidden}
+.step .pbar i{display:block;height:100%;background:var(--ok)}
+.step .scount{font-size:12px;color:var(--muted)}
+.step .chev{color:var(--muted)}
 .scards{display:flex;flex-direction:column;gap:26px}
 .scard{display:flex;flex-direction:column;gap:10px;text-align:left;width:100%}
 .sviz{position:relative;border-radius:16px;background:var(--tint);min-height:150px;display:flex;align-items:center;justify-content:center;padding:34px 16px 20px}
@@ -829,11 +843,11 @@ let view="home",sess=null,st=null,banner="",lvView=1;
 
 const lvIds=n=>SETS.filter(s=>s.lv===n).map(s=>s.id);
 const LEVELS=[
-  {n:1,name:"まず結論を言う",sub:"日本語から結論を選ぶ",ids:lvIds(1)},
-  {n:2,name:"後ろに情報を足す（レベル1）",sub:"どこで・いつ／前置詞系／to不定詞",ids:lvIds(2)},
-  {n:3,name:"後ろに情報を足す（レベル2）",sub:"and / but / so / because / when / if",ids:lvIds(3)},
-  {n:4,name:"後ろに情報を足す（レベル3）",sub:"that / who",ids:lvIds(4)},
-  {n:5,name:"後ろに情報を足す（レベル4）",sub:"総合問題（全部組み合わせる）",ids:lvIds(5)}
+  {n:1,name:"日本語で結論を言う練習",sub:"日本語から結論を選ぶ",ids:lvIds(1)},
+  {n:2,name:"後ろに情報を足す レベル1",sub:"どこで・いつ／前置詞系／to不定詞",ids:lvIds(2)},
+  {n:3,name:"後ろに情報を足す レベル2",sub:"and / but / so / because / when / if",ids:lvIds(3)},
+  {n:4,name:"後ろに情報を足す レベル3",sub:"that / who",ids:lvIds(4)},
+  {n:5,name:"後ろに情報を足す レベル4",sub:"総合問題（全部組み合わせる）",ids:lvIds(5)}
 ];
 const isTest=()=>sess&&sess.mode!=="practice";
 const isStepTest=()=>sess&&/^st\d$/.test(sess.mode);
@@ -867,20 +881,18 @@ function navTop(title,sub,back="home"){return`<header class="top bar"><span clas
 
 function renderHome(){
   const cur=curLevel();
-  /* 各ステップのカードに載せる英文の見本（動画・アプリ内の例文から） */
-  const SAMPLE={1:[["core","I had breakfast."]],2:WAYS[0].ex[0],3:WAYS[3].ex[0],4:WAYS[4].ex[1],
-    5:[["core","I know a cafe"],["that","that has good coffee,"],["but","but it's a little far."]]};
-  const viz=n=>`<span class="sent">${SAMPLE[n].map((p,j)=>j?plusChunk(p[0],p[1]):chunk(p[0],p[1])).join("")}</span>`;
-  const cards=LEVELS.map(l=>{const ok=l.ids.filter(id=>lastRes(id)==="ok").length;
-    return`<button class="scard ${l.n===cur?"cur":""}" data-act="level" data-v="${l.n}">
-      <span class="sviz" style="--tint:var(--tint${l.n})">${l.n===cur?'<span class="badge">いまここ</span>':""}<span class="stepno">${l.n}</span>${viz(l.n)}</span>
-      <span class="smeta"><span class="srow"><b>${l.n}　${esc(l.name)}</b><span class="scount">${ok} / ${l.ids.length}</span></span>
-      <span class="ssub">${esc(l.sub)}</span><span class="bar">${l.ids.map(id=>`<i class="${lastRes(id)||""}"></i>`).join("")}</span></span></button>`}).join("");
+  const cards=LEVELS.map(l=>{const ok=l.ids.filter(id=>lastRes(id)==="ok").length,m=l.name.match(/^(.*?) (レベル\d)$/);
+    return`<button class="step ${l.n===cur?"cur":""}" data-act="level" data-v="${l.n}" style="--tint:var(--tint${l.n})">
+      <span class="sno">${l.n}</span>
+      <span class="sbody">${l.n===cur?'<span class="badge">いまここ</span>':""}<b>${m?`${esc(m[1])}<span class="lvtag">${m[2]}</span>`:esc(l.name)}</b>
+        <span class="ssub">${esc(l.sub)}</span>
+        <span class="sprog"><span class="pbar"><i style="width:${l.ids.length?Math.round(ok/l.ids.length*100):0}%"></i></span><span class="scount">${ok} / ${l.ids.length}</span></span></span>
+      <span class="chev">${IC.chev}</span></button>`}).join("");
   const WIC=[IC.pin,IC.at,IC.target,IC.link,IC.user];
   app.innerHTML=`<header class="top"><div class="brand"><span class="logo"><i></i><i></i><i></i></span><b>つぎ足し英作文</b></div><button class="recbtn" data-act="go" data-v="record" aria-label="学習記録"><span class="round">${IC.chart}</span><small>学習記録</small></button></header>
+  <section class="steps"><div class="sechead"><b>ステップ1から順番に練習しよう</b></div>${cards}</section>
   <section class="cats-row"><div class="sechead"><b>後ろから情報を足す5つのパターン</b></div>
     <div class="iconrow">${WAYS.map((w,i)=>`<button data-act="pattern" data-v="${i}">${WIC[i]}<span>${esc(w.short).replace("\n","<br>")}</span></button>`).join("")}</div></section>
-  <div class="scards">${cards}</div>
   <div class="rows">
     <button class="row" data-act="go" data-v="library"><span class="ic">${IC.book}</span><span><b>5つのパターン</b><span>お手本と例文</span></span><span class="chev">${IC.chev}</span></button>
     <button class="row" data-act="mix"><span class="ic">${IC.shuf}</span><span><b>ランダム出題</b><span>全ステップをまぜて</span></span><span class="chev">${IC.chev}</span></button>
