@@ -188,6 +188,19 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .pt-table b{font-weight:700}
 .pt-ex{display:flex;flex-direction:column;gap:6px}
 .pt-ex .ex,.pt-en .ex{display:flex;flex-wrap:wrap;gap:10px 6px;align-items:flex-end}
+/* 最初の説明 */
+.in-dots{display:flex;gap:6px;justify-content:center}
+.in-dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.in-dots i.on{background:var(--ink);width:20px;border-radius:4px}
+.in-viz{border-radius:16px;background:var(--tint2);padding:26px 18px;display:flex;flex-direction:column;gap:12px;align-items:center;min-height:200px;justify-content:center}
+.in-viz .chunk .txt{background:var(--bg)}
+.in-steps{margin:0;padding:0;list-style:none;counter-reset:s;display:flex;flex-direction:column;gap:10px;width:100%}
+.in-steps li{counter-increment:s;display:grid;grid-template-columns:30px 1fr;column-gap:12px;align-items:center;background:var(--bg);border-radius:12px;padding:12px 14px}
+.in-steps li::before{content:counter(s);grid-row:span 2;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-en);font-weight:700;font-size:13px}
+.in-steps b{font-size:15px}
+.in-steps span{font-size:12.5px;color:var(--muted)}
+.in-body p{margin:0 0 10px;font-size:15px;line-height:1.75}
+.in-body b{font-weight:700}
 /* 英文のかたまり */
 .sent{display:flex;flex-wrap:wrap;justify-content:center;gap:12px 6px;align-items:flex-end;min-height:52px}
 .grp{display:inline-flex;align-items:flex-end;gap:6px;max-width:100%}
@@ -829,7 +842,7 @@ const WAYS=[
   {t:"desc",short:"人・物の\n説明",name:"人・物を説明する（that / who）",lv:"ステップ4",ex:[[["core","I know a cafe"],["desc","that has good coffee."]],[["core","I have a friend"],["desc","who loves traveling."]]]}
 ];
 
-function render(){({home:renderHome,tests:renderTests,pattern:renderPattern,level:renderLevel,record:renderRecord,library:renderLibrary,practice:renderPractice,summary:renderSummary}[view])();addWbr(app)}
+function render(){({intro:renderIntro,home:renderHome,tests:renderTests,pattern:renderPattern,level:renderLevel,record:renderRecord,library:renderLibrary,practice:renderPractice,summary:renderSummary}[view])();addWbr(app)}
 /* 日本語を文節のまとまりで改行させる：ひらがなの後に漢字・カタカナ・英数字・かっこが来る位置と、「・」「／」の後に改行候補を入れる。
    CSSの word-break:keep-all と組み合わせて、単語の途中で折り返さないようにする */
 const RE_H=/[\u3041-\u309F]/,RE_NEXT=/[\u4E00-\u9FFF\u3005\u30A0-\u30FFA-Za-z0-9（「]/,RE_AFTER=/[・／]/;
@@ -946,6 +959,7 @@ function renderRecord(){
   ${rev.length?`<section class="glass panel"><h2>復習が必要な問題</h2><div>${rev.map(id=>`<div class="li"><span class="q">${esc(BYID[id].jp)}</span><span class="chip ${lastRes(id)}">${lastRes(id)==="hint"?"ヒントあり":"要復習"}</span></div>`).join("")}</div>
     <button class="big" data-act="start" data-ids="${rev.join(",")}">まとめて復習する</button></section>`:""}
   <section class="glass panel"><h2>設定</h2>
+    <div class="setting"><span>アプリの使い方</span><button class="chipbtn" data-act="intro">使い方を見る</button></div>
     <div class="setting"><span>練習方法</span><span class="seg glass"><button class="${inputMode()==="voice"?"on":""}" data-act="input" data-v="voice">声に出す</button><button class="${inputMode()==="type"?"on":""}" data-act="input" data-v="type">タイピング</button></span></div>
     <div class="setting"><span>声に出すときの判定</span><span class="seg glass"><button class="${store.settings.judge==="mic"?"on":""}" data-act="judge" data-v="mic">マイク</button><button class="${store.settings.judge==="self"?"on":""}" data-act="judge" data-v="self">自分で</button></span></div>
     <div class="setting"><span>お手本の速さ</span><span class="seg glass"><button class="${R===0.75?"on":""}" data-act="rate" data-v="0.75">ゆっくり</button><button class="${R===0.9?"on":""}" data-act="rate" data-v="0.9">ふつう</button><button class="${R===1.05?"on":""}" data-act="rate" data-v="1.05">速め</button></span></div>
@@ -1121,6 +1135,10 @@ app.addEventListener("click",async e=>{
   else if(act==="test1"){const tried=PRACTICE.filter(s=>store.sets[s.id]&&s.lv!==1).map(s=>s.id);const pool=tried.length>=5?tried:PRACTICE.filter(s=>s.lv!==1).map(s=>s.id);startSession(shuffle(pool).slice(0,5),"t1")}
   else if(act==="test2"){startSession(genSession(5),"t2")}
   else if(act==="steptest"){const n=+b.dataset.v;startSession(STEP_TESTS[n].map(s=>s.id),"st"+n)}
+  else if(act==="intro"){introFrom=view;introStep=0;view="intro";render();window.scrollTo(0,0)}
+  else if(act==="intro-next"){introStep++;render();window.scrollTo(0,0)}
+  else if(act==="intro-prev"){introStep=Math.max(0,introStep-1);render();window.scrollTo(0,0)}
+  else if(act==="intro-done"){store.settings.introSeen=true;save();view=introFrom==="record"?"record":"home";introFrom="home";render();window.scrollTo(0,0)}
   else if(act==="pattern"){stopRec();if(view!=="pattern")navStack.push(view);patView=+b.dataset.v;view="pattern";render();window.scrollTo(0,0)}
   else if(act==="from"){const ids=LEVELS[+b.dataset.lv-1].ids;startSession(ids.slice(+b.dataset.i))}
   else if(act==="start"){const ids=b.dataset.ids.split(",");
@@ -1162,6 +1180,29 @@ function typeCheck(){const v=(document.getElementById("ans")?.value||"").trim();
 app.addEventListener("input",e=>{if(e.target.id==="ans"&&st)st.typed=e.target.value});
 app.addEventListener("keydown",e=>{if(e.target.id==="ans"&&e.key==="Enter"&&!e.isComposing){e.preventDefault();typeCheck()}});
 function stopRec(){if(recCtl)recCtl.stop();else{try{rec&&rec.stop()}catch(e){}}}
+/* ============ 最初の説明（初回だけ表示・学習記録からいつでも見られる） ============ */
+let introStep=0,introFrom="home";
+function renderIntro(){
+  const ex=[["core","I had breakfast"],["place","at the hotel"],["time","this morning."]];
+  const pages=[
+    {t:"まず結論を言う → 後ろに情報を足す",
+     viz:`<span class="small">今朝、ホテルで朝ごはんを食べました。</span><span class="sent">${ex.map((p,j)=>j?plusChunk(p[0],p[1]):chunk(p[0],p[1])).join("")}</span>`,
+     b:`<p>長い文も、いきなり全部を英語にしません。</p><p>まず短い「結論」の文を言ってから、どこで・いつ・誰と…と<b>後ろに情報を足していきます</b>。動画で練習したのと同じやり方です。</p>`},
+    {t:"1問はこう進みます",
+     viz:`<ol class="in-steps"><li><b>英語にする</b><span>結論の文だけを英語で言う</span></li><li><b>後ろに足す</b><span>情報を1つずつ足していく</span></li><li><b>通しで言う</b><span>最後に、最初から全部言う</span></li></ol>`,
+     b:`<p>声に出すか、タイピングかは最初の問題で選べます。声に出すときは、はじめにマイクの使用を聞かれるので「許可」を押してください。</p><p>分からないときは、ヒントや「答えを見る」を使って大丈夫です。</p>`},
+    {t:"おすすめの進め方",
+     viz:`<ol class="in-steps"><li><b>ステップ1から順番に</b><span>今いるステップに「いまここ」が付きます</span></li><li><b>ステップごとの確認テスト</b><span>ヒントなしで、一発で全文を言えるか確かめる</span></li><li><b>学習記録で復習</b><span>止まったところから、もう一度練習できます</span></li></ol>`,
+     b:`<p>1日数問でも大丈夫です。続けるうちに、短く言って後ろに足す感覚が身についていきます。</p>`}];
+  const p=pages[introStep],last=introStep===pages.length-1;
+  app.innerHTML=`<header class="top"><div class="brand"><span class="logo"><i></i><i></i><i></i></span><b>つぎ足し英作文</b></div><button class="ghost" data-act="intro-done">スキップ</button></header>
+  <div class="in-dots">${pages.map((x,i)=>`<i class="${i===introStep?"on":""}"></i>`).join("")}</div>
+  <section class="in-viz">${p.viz}</section>
+  <div class="qhead"><span class="small">使い方　${introStep+1} / ${pages.length}</span><h2>${p.t}</h2></div>
+  <div class="in-body">${p.b}</div>
+  <div class="dock">${introStep>0?`<button class="big lite" data-act="intro-prev">← 戻る</button>`:""}<button class="big" data-act="${last?"intro-done":"intro-next"}">${last?"はじめる":"次へ"}</button></div>`;
+}
+try{if(!store.settings.introSeen){view="intro"}}catch(e){}
 render();
 </script>
 </body>
