@@ -667,7 +667,7 @@ function renderHome(){
   </div>
   <div class="tiles">
     <button class="glass tile" data-act="test1"><span class="ic">${IC.check}</span><span><b>確認テスト1</b><span>練習した問題を、ヒントなしで復習</span></span></button>
-    <button class="glass tile" data-act="test2"><span class="ic">${IC.check}</span><span><b>確認テスト2</b><span>毎回ちがう新しい問題に挑戦</span></span></button>
+    <button class="glass tile" data-act="test2"><span class="ic">${IC.check}</span><span><b>確認テスト2</b><span>ステップ5まで終わったら挑戦しよう！毎回ちがう問題が出ます</span></span></button>
   </div>
   ${micBlocked&&store.settings.judge==="mic"?`<div class="banner">この画面ではマイクが使えないため、「自分で判定」で進みます。</div>`:""}
   <p class="foot">たかしとれいちゃんの英語日和</p>`;
@@ -722,7 +722,7 @@ function renderRecord(){
   <section class="glass panel"><h2>直近14日</h2><div class="days">${days.join("")}</div></section>
   <section class="glass panel"><h2>確認テスト</h2>
     <div class="li"><span class="q"><b>テスト1</b>　練習した問題の復習<br><span class="small">${tline("t1","まだ挑戦していません")}</span></span><button class="chipbtn" data-act="test1">受ける</button></div>
-    <div class="li"><span class="q"><b>テスト2</b>　毎回ちがう新しい問題<br><span class="small">${tline("t2","まだ挑戦していません")}</span></span><button class="chipbtn" data-act="test2">受ける</button></div></section>
+    <div class="li"><span class="q"><b>テスト2</b>　毎回ちがう新しい問題（ステップ5まで終わったら挑戦しよう！）<br><span class="small">${tline("t2","まだ挑戦していません")}</span></span><button class="chipbtn" data-act="test2">受ける</button></div></section>
   <section class="glass panel"><h2>止まりやすいところ</h2>
     ${stuck.length?stuck.map(([lab,arr])=>`<div class="li"><span>${esc(lab)}<span class="small">　${arr.length}問</span></span><button class="chipbtn" data-act="start" data-ids="${arr.join(",")}">ここを練習</button></div>`).join("")
       :`<p class="small">問題に取り組むと、どこで止まったかがここに出ます。</p>`}</section>
