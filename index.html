@@ -815,8 +815,7 @@ function renderPattern(){
   <section class="pt-sec"><h3>よく使う形</h3><div class="pt-table">${p.table.map(r=>`<div><b class="en">${esc(r[0])}</b><span>${esc(r[1])}</span></div>`).join("")}</div></section>
   <section class="pt-sec"><h3>例文</h3>${p.examples.map(e=>`<div class="pt-ex"><div class="ex">${exLine(e[0])}</div><span class="small">${esc(e[1])}</span></div>`).join("")}</section>
   ${p.notes.length?`<section class="pt-sec"><h3>知っておくと安心</h3><ul class="pt-points">${p.notes.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section>`:""}
-  <section class="pt-sec"><h3>このパターンを練習する</h3><div class="rows">${p.practice.map(pr=>{const ids=SETS.filter(s=>s.lv===p.step&&pr.cats.includes(s.cat)).map(s=>s.id);
-    return`<button class="row" data-act="start" data-ids="${ids.join(",")}"><span class="ic">${IC.play}</span><span><b>${esc(pr.label)}</b><span>${ids.length}問　・　ステップ${p.step}</span></span><span class="chev">${IC.chev}</span></button>`}).join("")}
+  <section class="pt-sec"><h3>このパターンを練習する</h3><div class="rows">
     <button class="row" data-act="level" data-v="${p.step}"><span class="ic">${IC.book}</span><span><b>ステップ${p.step}を開く</b><span>${esc(LEVELS[p.step-1].name)}</span></span><span class="chev">${IC.chev}</span></button></div></section>
   <div class="dock">${patView>0?`<button class="big lite" data-act="pattern" data-v="${patView-1}">← 前のパターン</button>`:""}${patView<4?`<button class="big" data-act="pattern" data-v="${patView+1}">次のパターン →</button>`:`<button class="big" data-act="go" data-v="library">5つのパターン一覧へ</button>`}</div>`;
   app.style.setProperty("--c",`var(${TY(w.t).c})`);
