@@ -151,6 +151,14 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .li:first-of-type{border-top:0}
 .li .q{min-width:0}
 .chip{font-size:11.5px;border-radius:999px;padding:3px 10px;font-weight:500;border:1px solid currentColor;flex-shrink:0}
+.chip.none{color:var(--faint)}
+.hist{display:flex;flex-direction:column}
+.hrow{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 0;border-top:1px solid var(--line2);font-size:14px}
+.hrow:first-child{border-top:0}
+.hrow .hn{width:24px;flex-shrink:0;color:var(--muted);font-family:var(--f-en);font-variant-numeric:tabular-nums;font-size:13px}
+.hrow .q{flex:1;min-width:0}
+.hrow.next .q{font-weight:700}
+.hrow.next .pill{background:var(--accent);color:var(--accent-ink)}
 .chip.ok{color:var(--ok)}.chip.hint{color:var(--hint)}.chip.ng{color:var(--ng)}
 .chipbtn{border:1px solid var(--ink);border-radius:10px;padding:8px 14px;font-size:13px;font-weight:500}
 .setting{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
@@ -394,6 +402,35 @@ S("4-m10",5,"mix","英語を話せる友達と旅行していますが、自分�
 ];
 const BYID=Object.fromEntries(SETS.map(s=>[s.id,s]));
 const PRACTICE=SETS;
+/* ステップごとの確認テスト（各5問・固定）。練習には出ない問題。日本語を見て、そのステップの形で全文を言う */
+const STEP_TESTS={
+ 1:[S("K1-1",1,"test","昨日、友達とカフェでケーキを食べました。","ケーキを食べました。","I had cake.",["I ate cake.","I had some cake.","I ate some cake.","I had the cake.","I ate the cake."],[],[]),
+    S("K1-2",1,"test","来月、家族と沖縄に行きます。","沖縄に行きます。","I'm going to Okinawa.",["I'll go to Okinawa.","I will go to Okinawa."],[],[]),
+    S("K1-3",1,"test","駅の近くにある本屋を探しています。","本屋を探しています。","I'm looking for a bookstore.",["I'm looking for a bookshop.","I'm looking for a book store."],[],[]),
+    S("K1-4",1,"test","雨が降っていたので、タクシーに乗りました。","タクシーに乗りました。","I took a taxi.",["I got a taxi.","I took the taxi."],[],[]),
+    S("K1-5",1,"test","毎朝、公園で犬と散歩します。","散歩します。","I take a walk.",["I walk.","I go for a walk."],[],[])],
+ 2:[S("K2-1",2,"test","昨日、駅で友達に会いました。","友達に会いました。","I met a friend.",["I met my friend.","I saw a friend."],[],[A("place","駅で","at the station"),A("time","昨日","yesterday")]),
+    S("K2-2",2,"test","毎週末、家族と公園に行きます。","公園に行きます。","I go to the park.",[],[],[A("with","家族と","with my family"),A("time","毎週末","every weekend")]),
+    S("K2-3",2,"test","地下鉄で美術館に行きました。","美術館に行きました。","I went to the museum.",["I went to the art museum."],[],[A("by","地下鉄で","by subway",["by metro","by train"])]),
+    S("K2-4",2,"test","図書館で2時間勉強しました。","勉強しました。","I studied.",[],[],[A("place","図書館で","at the library"),A("for","2時間","for two hours")]),
+    S("K2-5",2,"test","薬を買うために、薬局に行きました。","薬局に行きました。","I went to the pharmacy.",["I went to the drugstore.","I went to a pharmacy."],[],[A("purpose","薬を買うために","to buy some medicine",["to buy medicine","to get some medicine"])])],
+ 3:[S("K3-1",3,"test","朝ごはんを食べて、散歩しました。","朝ごはんを食べました。","I had breakfast.",["I ate breakfast."],[],[A("and","散歩した","and I took a walk",["and I went for a walk","and I walked"])]),
+    S("K3-2",3,"test","そのレストランは人気ですが、高いです。","そのレストランは人気です。","The restaurant is popular.",[],[],[A("but","高い","but it's expensive",["but it is expensive"])]),
+    S("K3-3",3,"test","雨が降っているので、タクシーで行きましょう。","雨が降っています。","It's raining.",["It is raining."],[],[A("so","タクシーで行こう","so let's go by taxi",["so let's take a taxi"])]),
+    S("K3-4",3,"test","駅に着いたら、メッセージを送るね。","メッセージを送るね。","I'll send you a message.",["I'll text you.","I will send you a message."],[],[A("when","駅に着いたとき","when I get to the station",["when I arrive at the station"])]),
+    S("K3-5",3,"test","もし疲れたら、休憩しよう。","休憩しよう。","Let's take a break.",[],[],[A("if","もし疲れたら","if you get tired",["if you're tired","if we get tired"])])],
+ 4:[S("K4-1",4,"test","フランス語を話せる友達がいます。","友達がいます。","I have a friend.",[],[],[A("who","フランス語を話せる","who speaks French",["who can speak French"])]),
+    S("K4-2",4,"test","これが、母が作ったケーキです。","これがケーキです。","This is the cake.",[],[],[A("that","母が作った","that my mother made",["that my mom made"])]),
+    S("K4-3",4,"test","店員さんがすすめてくれたケーキを食べました。","ケーキを食べました。","I had the cake.",["I ate the cake."],[],[A("that","店員さんがすすめてくれた","that the staff recommended",["that the clerk recommended","that the server recommended"])]),
+    S("K4-4",4,"test","英語のメニューがあるカフェを探しています。","カフェを探しています。","I'm looking for a cafe.",[],[],[A("that","英語のメニューがある","that has an English menu")]),
+    S("K4-5",4,"test","日本語を教えてくれる先生がいます。","先生がいます。","I have a teacher.",[],[],[A("who","日本語を教えてくれる","who teaches me Japanese",["who teaches Japanese","who can teach me Japanese"])])],
+ 5:[S("K5-1",5,"test","疲れていたので、昨日は家で映画を見ました。","映画を見ました。","I watched a movie.",["I saw a movie."],[],[A("place","家で","at home"),A("time","昨日","yesterday"),A("because","疲れていたから","because I was tired")]),
+    S("K5-2",5,"test","駅の近くにあるホテルに泊まっていますが、少しうるさいです。","ホテルに泊まっています。","I'm staying at a hotel.",["I'm staying at the hotel."],[],[A("that","駅の近くにある","that is near the station",["that's near the station"]),A("but","少しうるさい","but it's a little noisy",["but it's a bit noisy"])]),
+    S("K5-3",5,"test","昨日、写真を撮るために、友達と京都に行きました。","京都に行きました。","I went to Kyoto.",[],[],[A("with","友達と","with a friend",["with my friend"]),A("time","昨日","yesterday"),A("purpose","写真を撮るために","to take pictures",["to take photos"])]),
+    S("K5-4",5,"test","来月、カナダに住んでいる娘に会うために、夫とバンクーバーに行きます。","バンクーバーに行きます。","I'm going to Vancouver.",["I'll go to Vancouver.","I will go to Vancouver."],[],[A("with","夫と","with my husband"),A("time","来月","next month"),A("purpose","娘に会うために","to see my daughter",["to visit my daughter"]),A("who","カナダに住んでいる","who lives in Canada")]),
+    S("K5-5",5,"test","英語を話すとき、間違えるのが怖いですが、毎日練習しています。","間違えるのが怖いです。","I'm afraid of making mistakes.",["I'm scared of making mistakes."],[],[A("when","英語を話すとき","when I speak English"),A("but","毎日練習している","but I practice every day",["but I'm practicing every day"])])]
+};
+Object.values(STEP_TESTS).flat().forEach(s=>{BYID[s.id]=s});
 /* 本番音声ファイルを差し込む場所： "英文": "音声ファイルのURL" */
 const AUDIO={};
 
@@ -674,7 +711,8 @@ const LEVELS=[
   {n:5,name:"後ろに情報を足す（レベル4）",sub:"総合問題（全部組み合わせる）",ids:lvIds(5)}
 ];
 const isTest=()=>sess&&sess.mode!=="practice";
-const catName=set=>isTest()?(sess.mode==="t1"?"確認テスト1":"確認テスト2"):set.lv===1?"ステップ1":"ステップ"+set.lv+"・"+CATS[set.lv].find(c=>c.k===set.cat).name.replace(/（.*）/,"");
+const isStepTest=()=>sess&&/^st\d$/.test(sess.mode);
+const catName=set=>isTest()?(isStepTest()?"ステップ"+sess.mode.slice(2)+"の確認テスト":"総合確認テスト"):set.lv===1?"ステップ1":"ステップ"+set.lv+"・"+CATS[set.lv].find(c=>c.k===set.cat).name.replace(/（.*）/,"");
 function dispText(set,i){/* i=-1:結論の文 */const t=i<0?strip(set.core):set.adds[i].en;const nx=set.adds[i+1];return nx&&COMMA.has(nx.t)?t+",":t}
 const WAYS=[
   {t:"place",short:"どこで\nいつ",name:"どこで・いつ",lv:"ステップ2",ex:[[["core","I had breakfast"],["place","at the hotel"],["time","this morning."]]]},
@@ -722,8 +760,7 @@ function renderHome(){
   <div class="rows">
     <button class="row" data-act="go" data-v="library"><span class="ic">${IC.book}</span><span><b>5つのパターン</b><span>お手本と例文</span></span><span class="chev">${IC.chev}</span></button>
     <button class="row" data-act="mix"><span class="ic">${IC.shuf}</span><span><b>ランダム出題</b><span>全ステップをまぜて</span></span><span class="chev">${IC.chev}</span></button>
-    <button class="row" data-act="test1"><span class="ic">${IC.check}</span><span><b>確認テスト1</b><span>練習した問題を、ヒントなしで復習</span></span><span class="chev">${IC.chev}</span></button>
-    <button class="row" data-act="test2"><span class="ic">${IC.check}</span><span><b>確認テスト2</b><span>ステップ5まで終わったら挑戦しよう！毎回ちがう問題が出ます</span></span><span class="chev">${IC.chev}</span></button>
+    <button class="row" data-act="test2"><span class="ic">${IC.check}</span><span><b>総合確認テスト</b><span>ステップ5まで終わったら挑戦しよう！毎回ちがう問題が出ます</span></span><span class="chev">${IC.chev}</span></button>
   </div>
   ${micBlocked&&store.settings.judge==="mic"?`<div class="banner">この画面ではマイクが使えないため、「自分で判定」で進みます。</div>`:""}
   <p class="foot">たかしとれいちゃんの英語日和</p>`;
@@ -743,16 +780,25 @@ function buildToday(){
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const marks=ids=>`<span class="marks">${ids.map(id=>`<i class="${lastRes(id)||""}"></i>`).join("")}</span>`;
 
+const RES_LABEL={ok:"ヒントなし",hint:"ヒントあり",ng:"要復習"};
+function testLine(mode){const x=(store.tests||{})[mode];return x&&x.last?`前回 ${x.last.ok} / ${x.last.total}問　・　最高 ${x.best} / ${x.last.total}問`:"まだ挑戦していません"}
+function nextIndex(ids){let i=ids.findIndex(id=>!store.sets[id]);if(i<0)i=ids.findIndex(id=>lastRes(id)!=="ok");return i}
 function renderLevel(){
-  const l=LEVELS[lvView-1];
+  const l=LEVELS[lvView-1];const ids=l.ids;const nx=nextIndex(ids);
   let inner="";
-  if(l.n===1){inner=`<section class="glass panel"><h2>ステップ1　まず結論を言う</h2><p class="small">日本語から「結論」を選んで、その短い文だけを英語にします。いつ・どこで・どんな、は後回し。</p>${marks(l.ids)}</section>`}
+  if(l.n===1){inner=`<section class="glass panel"><h2>ステップ1　まず結論を言う</h2><p class="small">日本語から「結論」を選んで、その短い文だけを英語にします。いつ・どこで・どんな、は後回し。</p>${marks(ids)}</section>`}
   else{const desc={2:"結論の文を言ってから、情報を1つずつ後ろに足します。",3:"短い文を言ってから、and・but・soなどで次の話をつなぎます。",4:"人や物を言ってから、that・whoで説明を足します。",5:"ここまでの足し方を全部組み合わせて、長い文を組み立てます。"}[l.n];
     inner=`<section class="glass panel"><h2>ステップ${l.n}　${l.name}</h2><p class="small">${desc}</p>
-    <div class="cats">${CATS[l.n].map(c=>{const ids=SETS.filter(s=>s.lv===l.n&&s.cat===c.k).map(s=>s.id);
-      return`<button class="cat" style="--c:var(${TY(c.k).c})" data-act="start" data-ids="${ids.join(",")}"><span class="nm"><i></i>${c.name}</span><span class="en">${c.en}</span>${marks(ids)}</button>`}).join("")}</div></section>`}
-  app.innerHTML=navTop("ステップ"+l.n,l.ids.filter(id=>lastRes(id)==="ok").length+" / "+l.ids.length)+inner+
-  `<div class="dock"><button class="big lite" data-act="random" data-lv="${l.n}">ランダム5問</button><button class="big" data-act="start" data-ids="${l.ids.join(",")}">順番に練習</button></div>`;
+    <div class="cats">${CATS[l.n].map(c=>{const cids=SETS.filter(s=>s.lv===l.n&&s.cat===c.k).map(s=>s.id);
+      return`<button class="cat" style="--c:var(${TY(c.k).c})" data-act="start" data-ids="${cids.join(",")}"><span class="nm"><i></i>${c.name}</span><span class="en">${c.en}</span>${marks(cids)}</button>`}).join("")}</div></section>`}
+  /* このステップの確認テスト */
+  inner+=`<section class="glass panel"><h2>ステップ${l.n}の確認テスト</h2><p class="small">練習が終わったら、ヒントなしで全文を言えるか確かめよう（${STEP_TESTS[l.n].length}問）</p>
+    <div class="li"><span class="q small">${testLine("st"+l.n)}</span><button class="chipbtn" data-act="steptest" data-v="${l.n}">受ける</button></div></section>`;
+  /* 問題一覧：これまでの記録と「ここから始める」 */
+  inner+=`<section class="glass panel"><h2>問題一覧</h2><p class="small">タップすると、その問題から始められます</p><div class="hist">${ids.map((id,i)=>{const r=lastRes(id);
+    return`<button class="hrow ${i===nx?"next":""}" data-act="from" data-lv="${l.n}" data-i="${i}"><span class="hn">${i+1}</span><span class="q">${esc(BYID[id].jp)}</span>${i===nx?'<span class="pill">次はここから</span>':`<span class="chip ${r||"none"}">${r?RES_LABEL[r]:"未挑戦"}</span>`}</button>`}).join("")}</div></section>`;
+  app.innerHTML=navTop("ステップ"+l.n,ids.filter(id=>lastRes(id)==="ok").length+" / "+ids.length)+inner+
+  `<div class="dock"><button class="big lite" data-act="random" data-lv="${l.n}">ランダム5問</button>${nx>0?`<button class="big" data-act="from" data-lv="${l.n}" data-i="${nx}">続きから（${nx+1}問目）</button>`:`<button class="big" data-act="start" data-ids="${ids.join(",")}">順番に練習</button>`}</div>`;
 }
 
 function renderLibrary(){
@@ -780,8 +826,8 @@ function renderRecord(){
   <div class="stats"><div class="stat"><b>${ids.length}</b><span>取り組んだ<br>/ ${PRACTICE.length}問</span></div><div class="stat"><b>${ok}</b><span>ヒントなしで<br>言えた</span></div><div class="stat"><b>${streak}</b><span>連続日数</span></div></div>
   <section class="glass panel"><h2>直近14日</h2><div class="days">${days.join("")}</div></section>
   <section class="glass panel"><h2>確認テスト</h2>
-    <div class="li"><span class="q"><b>テスト1</b>　練習した問題の復習<br><span class="small">${tline("t1","まだ挑戦していません")}</span></span><button class="chipbtn" data-act="test1">受ける</button></div>
-    <div class="li"><span class="q"><b>テスト2</b>　毎回ちがう新しい問題（ステップ5まで終わったら挑戦しよう！）<br><span class="small">${tline("t2","まだ挑戦していません")}</span></span><button class="chipbtn" data-act="test2">受ける</button></div></section>
+    ${LEVELS.map(l=>`<div class="li"><span class="q"><b>ステップ${l.n}の確認テスト</b><br><span class="small">${testLine("st"+l.n)}</span></span><button class="chipbtn" data-act="steptest" data-v="${l.n}">受ける</button></div>`).join("")}
+    <div class="li"><span class="q"><b>総合確認テスト</b>　毎回ちがう新しい問題（ステップ5まで終わったら挑戦しよう！）<br><span class="small">${tline("t2","まだ挑戦していません")}</span></span><button class="chipbtn" data-act="test2">受ける</button></div></section>
   <section class="glass panel"><h2>止まりやすいところ</h2>
     ${stuck.length?stuck.map(([lab,arr])=>`<div class="li"><span>${esc(lab)}<span class="small">　${arr.length}問</span></span><button class="chipbtn" data-act="start" data-ids="${arr.join(",")}">ここを練習</button></div>`).join("")
       :`<p class="small">問題に取り組むと、どこで止まったかがここに出ます。</p>`}</section>
@@ -811,7 +857,7 @@ function startSet(){
   /* ステップ1だけ「結論を選ぶ」から。ステップ2以降は英語にするところから */
   const steps=isTest()?[{k:"full"}]:set.lv===1?[{k:"pick"},{k:"core"},{k:"preview"}]:[{k:"core"}];
   if(!isTest()&&set.lv!==1){set.adds.forEach((a,i)=>steps.push({k:"add",i}));steps.push({k:"full"})}
-  const opts=shuffle([{t:set.coreJp,ok:true},{t:set.jp,why:"full"},{t:set.adds[0].jp,why:"detail"}]);
+  const opts=shuffle([{t:set.coreJp,ok:true},{t:set.jp,why:"full"},...(set.adds.length?[{t:set.adds[0].jp,why:"detail"}]:[])]);
   st={set,steps,si:0,res:{},opts,picked:[],ph:"ready",hint:0,heard:""};
   if(steps[0].k!=="pick"&&!sess.chosen)st.ph="choose";
 }
@@ -825,6 +871,7 @@ function stepAnswer(){const s=curStep(),set=st.set;if(s.k==="core")return set.co
 function hintList(){const s=curStep(),set=st.set;
   if(s.k==="core")return["語句："+set.words.map(esc).join("　/　"),"出だし：<span class='en'>"+esc(set.core.split(" ").slice(0,2).join(" "))+" …</span>"];
   if(s.k==="add"){const a=set.adds[s.i];const n=["and","but","so","because","when","if","that","who"].includes(a.t)?2:1;return["出だし：<span class='en'>"+esc(a.en.split(" ").slice(0,n).join(" "))+" …</span>"]}
+  if(isStepTest())return[];
   if(s.k==="full"&&isTest())return["順番："+[set.coreJp.replace(/[。？]/g,""),...set.adds.map(a=>a.jp)].map(esc).join(" → ")];
   if(s.k==="full")return["順番："+[set.coreJp.replace(/[。？]/g,""),...set.adds.map(a=>a.jp)].map(esc).join(" → "),
     "出だし：<span class='en'>"+[set.core.split(" ").slice(0,2).join(" "),...set.adds.map(a=>a.en.split(" ")[0])].map(w=>esc(w)+" …").join(" ／ ")+"</span>"];
@@ -869,7 +916,7 @@ function renderPractice(){
   }else{
     if(s.k==="core"){h2="結論の文を英語で";sub="「"+set.coreJp+"」"}
     if(s.k==="add"){const a=set.adds[s.i];h2="後ろに「"+a.jp+"」を足そう";sub=TY(a.t).l+"を足す　"+(s.i+1)+" / "+set.adds.length}
-    if(s.k==="full"){h2=isTest()?"英語で言ってみよう":"最初から通して言おう";sub=isTest()?"まず結論を言って、後ろに足していく":"ヒントなしで挑戦"}
+    if(s.k==="full"){h2=isTest()?(sess.mode==="st1"?"結論だけを英語で言おう":"英語で言ってみよう"):"最初から通して言おう";sub=isTest()?(sess.mode==="st1"?"いつ・どこで・どんな、は後回し":"まず結論を言って、後ろに足していく"):"ヒントなしで挑戦"}
     if(st.ph==="choose"){h2="どうやって練習する？";sub="このあとの問題も同じ方法で進みます。右上のボタンでいつでも切り替えられます"}
     const hl=hintList(),hs=hl.slice(0,st.hint).map(h=>`<div class="note hi">${h}</div>`).join("");
     stage=builtHTML()+hs;
@@ -930,6 +977,8 @@ function finishSet(){
   store.sets[set.id]=rec}
   store.days[today()]=(store.days[today()]||0)+1;save();
   sess.res.push({id:set.id,res:worst,stuck});sess.i++;
+  if(isTest()&&sess.i>=sess.ids.length){const x=store.tests[sess.mode];const okN=sess.res.filter(r=>r.res==="ok").length;
+    x.last={ok:okN,total:sess.ids.length,t:Date.now()};x.best=Math.max(x.best||0,okN);save()}
   if(sess.i>=sess.ids.length){view="summary"}else startSet();
   render();window.scrollTo(0,0);
 }
@@ -938,7 +987,7 @@ function renderSummary(){
   app.innerHTML=`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">おつかれさまでした</div><span style="width:40px"></span></header>
   <div class="qhead" style="padding-top:8px"><h2>${n} / ${sess.res.length} 問を<br>ヒントなしで言えました</h2><p>止まったところは、学習記録からもう一度練習できます</p></div>
   <section class="glass panel"><div>${sess.res.map(r=>`<div class="li"><span class="q">${esc(BYID[r.id].jp)}${r.stuck?`<br><span class="small">止まったところ：${esc(r.stuck)}</span>`:""}</span><span class="chip ${r.res}">${lab[r.res]}</span></div>`).join("")}</div></section>
-  <div class="tiles">${isTest()?`<button class="glass tile" data-act="${sess.mode==="t1"?"test1":"test2"}"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>新しい5問で</span></span></button>`:`<button class="glass tile" data-act="start" data-ids="${sess.ids.join(",")}"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>同じ問題で</span></span></button>`}
+  <div class="tiles">${isTest()?(isStepTest()?`<button class="glass tile" data-act="steptest" data-v="${sess.mode.slice(2)}"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>同じテストで</span></span></button>`:`<button class="glass tile" data-act="test2"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>新しい5問で</span></span></button>`):`<button class="glass tile" data-act="start" data-ids="${sess.ids.join(",")}"><span class="ic">${IC.shuf}</span><span><b>もう一度</b><span>同じ問題で</span></span></button>`}
   <button class="glass tile" data-act="go" data-v="record"><span class="ic">${IC.chart}</span><span><b>学習記録</b><span>止まった場所を見る</span></span></button></div>
   <div class="dock"><button class="big" data-act="today">次の練習へ</button></div>`;
 }
@@ -953,6 +1002,8 @@ app.addEventListener("click",async e=>{
   else if(act==="mix"){startSession(shuffle(PRACTICE.map(s=>s.id)).slice(0,5))}
   else if(act==="test1"){const tried=PRACTICE.filter(s=>store.sets[s.id]&&s.lv!==1).map(s=>s.id);const pool=tried.length>=5?tried:PRACTICE.filter(s=>s.lv!==1).map(s=>s.id);startSession(shuffle(pool).slice(0,5),"t1")}
   else if(act==="test2"){startSession(genSession(5),"t2")}
+  else if(act==="steptest"){const n=+b.dataset.v;startSession(STEP_TESTS[n].map(s=>s.id),"st"+n)}
+  else if(act==="from"){const ids=LEVELS[+b.dataset.lv-1].ids;startSession(ids.slice(+b.dataset.i))}
   else if(act==="start"){const ids=b.dataset.ids.split(",");
     /* 順番に練習：まだ解いていない問題から始め、解いた問題は後ろに回す */
     startSession([...ids.filter(id=>!store.sets[id]),...ids.filter(id=>store.sets[id])])}
