@@ -694,7 +694,7 @@ function curLevel(){const open=LEVELS.filter(l=>l.ids.length);return(open.find(l
 function navTop(title,sub,back="home"){return`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">${esc(title)}${sub?`<small>${esc(sub)}</small>`:""}</div><span style="width:40px"></span></header>`}
 
 function renderHome(){
-  const cur=curLevel();const q=buildToday();const first=BYID[q[0]];const started=Object.keys(store.sets).length>0;
+  const cur=curLevel();const q=todayQ=buildToday();const first=BYID[q[0]];const started=Object.keys(store.sets).length>0;
   const stairs=LEVELS.slice().reverse().map(l=>{
     const locked=!l.ids.length;const ok=l.ids.filter(id=>lastRes(id)==="ok").length;
     const off=`calc(${l.n-1} * min(16px, 3.5vw))`;
@@ -722,7 +722,10 @@ function renderHome(){
 function buildToday(){
   const tried=PRACTICE.filter(s=>store.sets[s.id]);
   const review=tried.filter(s=>lastRes(s.id)!=="ok").sort((a,b)=>store.sets[a.id].last.t-store.sets[b.id].last.t).slice(0,2).map(s=>s.id);
-  const fresh=PRACTICE.filter(s=>!store.sets[s.id]).slice(0,Math.max(1,3-review.length)).map(s=>s.id);
+  /* 新しい問題は「今いるステップ」の未挑戦からランダムに選ぶ（毎回同じ1問目にならないように） */
+  const lvNow=curLevel();let freshPool=PRACTICE.filter(s=>!store.sets[s.id]&&s.lv===lvNow);
+  if(!freshPool.length)freshPool=PRACTICE.filter(s=>!store.sets[s.id]);
+  const fresh=shuffle(freshPool).slice(0,Math.max(1,3-review.length)).map(s=>s.id);
   let q=[...fresh,...review];
   if(q.length<3){const pool=shuffle(tried.map(s=>s.id).filter(id=>!q.includes(id)));q=q.concat(pool.slice(0,3-q.length))}
   return q;
@@ -784,7 +787,7 @@ function renderRecord(){
 
 /* ---------- 練習 ---------- */
 let backTo="home";
-let navStack=[];
+let navStack=[],todayQ=null;
 /* 1つ戻る：練習中は1段階前へ（最初の段階なら練習前の画面へ）、それ以外は1つ前の画面へ */
 function goBack(){stopRec();banner="";
   if(view==="practice"&&st&&st.si>0){delete st.res[st.si];st.si--;delete st.res[st.si];
@@ -936,16 +939,18 @@ app.addEventListener("click",async e=>{
   if(act==="go"){stopRec();const v=b.dataset.v;if(v==="home")navStack=[];else if(view!==v&&view!=="practice")navStack.push(view);view=v;render();window.scrollTo(0,0)}
   else if(act==="level"){lvView=+b.dataset.v;if(view!=="level")navStack.push(view);view="level";render();window.scrollTo(0,0)}
   else if(act==="back"){goBack()}
-  else if(act==="today"){startSession(buildToday())}
+  else if(act==="today"){startSession(todayQ&&todayQ.length&&view==="home"?todayQ:buildToday())}
   else if(act==="mix"){startSession(shuffle(PRACTICE.map(s=>s.id)).slice(0,5))}
   else if(act==="test1"){const tried=PRACTICE.filter(s=>store.sets[s.id]&&s.lv!==1).map(s=>s.id);const pool=tried.length>=5?tried:PRACTICE.filter(s=>s.lv!==1).map(s=>s.id);startSession(shuffle(pool).slice(0,5),"t1")}
   else if(act==="test2"){startSession(genSession(5),"t2")}
-  else if(act==="start"){startSession(b.dataset.ids.split(","))}
+  else if(act==="start"){const ids=b.dataset.ids.split(",");
+    /* 順番に練習：まだ解いていない問題から始め、解いた問題は後ろに回す */
+    startSession([...ids.filter(id=>!store.sets[id]),...ids.filter(id=>store.sets[id])])}
   else if(act==="random"){startSession(shuffle(SETS.filter(s=>s.lv===+b.dataset.lv).map(s=>s.id)).slice(0,5))}
   else if(act==="input"){store.settings.input=b.dataset.v;save();render();if(view==="practice"&&inputMode()==="type")focusAns()}
   else if(act==="typecheck"){typeCheck()}
   else if(act==="judge"){store.settings.judge=b.dataset.v;save();render()}
-  else if(act==="rate"){store.settings.rate=+b.dataset.v;save();render();speak(view==="practice"&&curStep().k!=="pick"?(stepAnswer()||st.set.core):"I had breakfast at the hotel this morning.")}
+  else if(act==="rate"){store.settings.rate=+b.dataset.v;save();render();if(view!=="practice")speak("I had breakfast at the hotel this morning.")}
   else if(act==="quit"){stopRec();view=backTo||"home";render()}
   else if(act==="pick"){const o=st.opts[+b.dataset.i];if(st.picked.includes(o))return;st.picked.push(o);if(o.ok)setResult(st.picked.length===1?"ok":"hint");render()}
   else if(act==="next"){st.si++;st.ph="ready";st.hint=0;st.heard="";st.typed="";st.via="";banner="";if(st.si>=st.steps.length)return finishSet();
@@ -954,10 +959,10 @@ app.addEventListener("click",async e=>{
   else if(act==="finishSet"){finishSet()}
   else if(act==="play"){speak(b.dataset.t)}
   else if(act==="hint"){st.hint++;render();if(inputMode()==="type")focusAns()}
-  else if(act==="giveup"){stopRec();setResult("ng");st.ph="revealed";render();speak(stepAnswer())}
-  else if(act==="reveal-self"){st.ph="selfcheck";render();speak(stepAnswer())}
+  else if(act==="giveup"){stopRec();setResult("ng");st.ph="revealed";render()}
+  else if(act==="reveal-self"){st.ph="selfcheck";render()}
   else if(act==="self"){setResult(b.dataset.v==="ok"?(st.hint?"hint":"ok"):"ng");st.ph="checked";render()}
-  else if(act==="override"){setResult(st.hint?"hint":"ok");st.ph="passed";render();speak(stepAnswer())}
+  else if(act==="override"){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
   else if(act==="mic"){
     if(st.ph==="listening"){stopRec();return}
     st.ph="listening";render();
@@ -965,14 +970,14 @@ app.addEventListener("click",async e=>{
     if(r.err&&micBlocked){banner="この画面ではマイクが使えなかったので、「自分で判定」に切り替えました。";st.ph="ready";render();return}
     const said=r.said||[];st.heard=said[0]||"";
     st.via="voice";
-    if(passes(said,stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render();speak(stepAnswer())}
+    if(passes(said,stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
     else{st.ph="retry";render()}
   }
 });
 function focusAns(){const el=document.getElementById("ans");if(el){el.focus();const n=el.value.length;try{el.setSelectionRange(n,n)}catch(e){}}}
 function typeCheck(){const v=(document.getElementById("ans")?.value||"").trim();if(!v){focusAns();return}
   st.typed=v;st.heard=v;st.via="type";
-  if(passes([v],stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render();speak(stepAnswer())}
+  if(passes([v],stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
   else{st.ph="retry";render();focusAns()}}
 app.addEventListener("input",e=>{if(e.target.id==="ans"&&st)st.typed=e.target.value});
 app.addEventListener("keydown",e=>{if(e.target.id==="ans"&&e.key==="Enter"&&!e.isComposing){e.preventDefault();typeCheck()}});
