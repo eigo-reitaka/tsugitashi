@@ -208,7 +208,10 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .qhead h2{margin:0;font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
 .qhead p{margin:0;font-size:13.5px;color:var(--muted)}
 .stage{display:flex;flex-direction:column;gap:18px;min-height:300px;padding:20px 0 4px;border:0;border-top:1px solid var(--line2);border-radius:0}
-.jpq{font-size:16.5px;font-weight:500;line-height:1.6;text-wrap:balance;padding:14px 16px;border-radius:12px;background:var(--soft)}
+.jpq{display:flex;flex-direction:column;gap:4px;padding:16px 18px;border-radius:12px;background:var(--soft)}
+.jpq b{font-size:21px;font-weight:700;line-height:1.5;text-wrap:balance}
+.jpq .jl{font-size:12px;font-weight:700;color:var(--muted)}
+.jsrc{margin:-10px 2px 0}
 .opts{display:flex;flex-direction:column;gap:10px}
 .opt{text-align:left;border:1px solid var(--line);border-radius:12px;padding:15px 16px;font-size:15.5px}
 .opt:hover{border-color:var(--ink)}
@@ -1017,7 +1020,7 @@ function renderPractice(){
       <div class="answer"><button class="play" data-act="play" data-t="${esc(set.core)}">${IC.spk}お手本</button></div>`;
     dock=`<button class="big" data-act="finishSet">${sess.i+1<sess.ids.length?"次の問題へ":"結果を見る"}</button>`;
   }else{
-    if(s.k==="core"){h2="結論の文を英語で";sub="「"+set.coreJp+"」"}
+    if(s.k==="core"){h2="結論の文を英語で";sub=""}
     if(s.k==="add"){const a=set.adds[s.i];h2="後ろに「"+a.jp+"」を足そう";sub=TY(a.t).l+"を足す　"+(s.i+1)+" / "+set.adds.length}
     if(s.k==="full"){h2=isTest()?(sess.mode==="st1"?"結論だけを英語で言おう":"英語で言ってみよう"):"最初から通して言おう";sub=isTest()?(sess.mode==="st1"?"いつ・どこで・どんな、は後回し":"まず結論を言って、後ろに足していく"):"ヒントなしで挑戦"}
     if(st.ph==="choose"){h2="どうやって練習する？";sub="このあとの問題も同じ方法で進みます。右上のボタンでいつでも切り替えられます"}
@@ -1064,12 +1067,18 @@ function renderPractice(){
   app.innerHTML=`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">${esc(lvl)}<small>${sess.i+1} / ${sess.ids.length}</small></div><button class="round" data-act="input" data-v="${inputMode()==="type"?"voice":"type"}" aria-label="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}" title="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}">${inputMode()==="type"?IC.mic:IC.key}</button></header>
   ${tabsHTML()}
   <div class="qhead"><h2>${esc(h2)}</h2><p>${esc(sub)}</p></div>
-  <section class="glass stage"><div class="jpq">${esc(set.jp)}</div>${stage}</section>
+  <section class="glass stage">${promptHTML(set,s)}${stage}</section>
   ${under}
   ${banner?`<div class="banner">${esc(banner)}</div>`:""}
   <div class="dock">${dock}</div>`;
 }
 
+/* いま英語にする日本語を大きく、元の文は小さく添える */
+function promptHTML(set,s){
+  if(s.k==="core")return`<div class="jpq"><span class="jl">英語にする文</span><b>${esc(set.coreJp)}</b></div><p class="small jsrc">元の文：${esc(set.jp)}</p>`;
+  if(s.k==="add"){const a=set.adds[s.i];return`<div class="jpq"><span class="jl" style="color:var(${TY(a.t).c})">後ろに足す（${esc(TY(a.t).l)}）</span><b>${esc(a.jp)}</b></div><p class="small jsrc">元の文：${esc(set.jp)}</p>`}
+  return`<div class="jpq">${s.k==="full"&&!isTest()?'<span class="jl">英語にする文（全部）</span>':""}<b>${esc(set.jp)}</b></div>`;
+}
 function setResult(r){st.res[st.si]=r}
 function finishSet(){
   const set=st.set;const order={ok:0,hint:1,ng:2};let worst="ok",stuck=null;
