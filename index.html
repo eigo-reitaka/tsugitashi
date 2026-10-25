@@ -14,7 +14,7 @@
   --accent:#D9603B; --accent-ink:#FFFFFF; --accent-soft:#FBEDE7; --solid:#222222; --solid-ink:#FFFFFF;
   --mark:#FFE7A3; --ok:#1E7F55; --hint:#B26B12; --ng:#C13B2C;
   --shadow:0 6px 20px rgba(0,0,0,.08); --shadow-pill:0 3px 14px rgba(0,0,0,.12);
-  --tint1:#F3EDE4; --tint2:#E7EEF5; --tint3:#EAF0E2; --tint4:#F5E9EC; --tint5:#ECEAF4;
+  --tint1:#F3EDE4; --tint2:#E7EEF5; --tint3:#EAF0E2; --tint4:#F5E9EC; --tint5:#ECEAF4; --tint6:#F6F0D9; --tint7:#E2F1EF; --tint8:#F8E6DC;
   --t-core:#222222; --t-place:#0D8587; --t-time:#B8740B; --t-with:#7448CC; --t-by:#2477C9;
   --t-for:#BF3F74; --t-purpose:#3A8A2B; --t-desc:#5F6476; --t-reason:#B0442A; --t-cond:#4A68AA;
   --f-body:"DM Sans","Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;
@@ -26,7 +26,7 @@
   --accent:#EE7A55; --accent-ink:#1A0D08; --accent-soft:#3A2219; --solid:#F2F2F2; --solid-ink:#121212;
   --mark:#5C4A12; --ok:#4FC58B; --hint:#E3A447; --ng:#F07A5A;
   --shadow:0 6px 20px rgba(0,0,0,.4); --shadow-pill:0 3px 14px rgba(0,0,0,.5);
-  --tint1:#2A2620; --tint2:#1E252D; --tint3:#222A1C; --tint4:#2D2125; --tint5:#24222E;
+  --tint1:#2A2620; --tint2:#1E252D; --tint3:#222A1C; --tint4:#2D2125; --tint5:#24222E; --tint6:#2B2818; --tint7:#1B2A28; --tint8:#2E221C;
   --t-core:#F2F2F2; --t-place:#3CC4C6; --t-time:#E6A83C; --t-with:#A98BF0; --t-by:#64AEF0;
   --t-for:#EE7AA7; --t-purpose:#7CC96B; --t-desc:#A3A8BB; --t-reason:#EC8366; --t-cond:#8EA6E0;
   color-scheme:dark}}
@@ -35,7 +35,7 @@
   --accent:#EE7A55; --accent-ink:#1A0D08; --accent-soft:#3A2219; --solid:#F2F2F2; --solid-ink:#121212;
   --mark:#5C4A12; --ok:#4FC58B; --hint:#E3A447; --ng:#F07A5A;
   --shadow:0 6px 20px rgba(0,0,0,.4); --shadow-pill:0 3px 14px rgba(0,0,0,.5);
-  --tint1:#2A2620; --tint2:#1E252D; --tint3:#222A1C; --tint4:#2D2125; --tint5:#24222E;
+  --tint1:#2A2620; --tint2:#1E252D; --tint3:#222A1C; --tint4:#2D2125; --tint5:#24222E; --tint6:#2B2818; --tint7:#1B2A28; --tint8:#2E221C;
   --t-core:#F2F2F2; --t-place:#3CC4C6; --t-time:#E6A83C; --t-with:#A98BF0; --t-by:#64AEF0;
   --t-for:#EE7AA7; --t-purpose:#7CC96B; --t-desc:#A3A8BB; --t-reason:#EC8366; --t-cond:#8EA6E0;
   color-scheme:dark}
@@ -100,7 +100,6 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 /* ホーム：ステップのカード */
 .steps{display:flex;flex-direction:column;gap:10px}
 .step{display:grid;grid-template-columns:44px minmax(0,1fr) 18px;align-items:center;gap:12px;width:100%;text-align:left;background:var(--tint);border-radius:16px;padding:16px 14px 16px 16px;border:2px solid transparent}
-.steps.more .step{border-color:var(--line2)}
 .step .scount.sp{margin-top:4px}
 .step.cur{border-color:var(--ink)}
 .step .sno{width:44px;height:44px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-family:var(--f-en);font-weight:700;font-size:20px}
@@ -908,13 +907,13 @@ function renderHome(){
   <section class="cats-row"><div class="sechead col"><b>後ろから情報を足す5つのパターンの解説</b><span class="secnote">※マークを押すと解説が見れます！</span></div>
     <div class="iconrow">${WAYS.map((w,i)=>`<button data-act="pattern" data-v="${i}">${WIC[i]}<span>${esc(w.short).replace("\n","<br>")}</span></button>`).join("")}</div></section>
   <section class="steps more">${[
-    {n:6,t:"ステップごとの確認テスト",sub:"ステップ1〜5、それぞれ5問。ヒントなしで全文を言えるか確かめよう",a:'data-act="go" data-v="tests"',
-      p:(()=>{const k=[1,2,3,4,5].filter(i=>store.tests&&store.tests["st"+i]&&store.tests["st"+i].last).length;return`受けたテスト ${k} / 5`})()},
-    {n:7,t:"ランダム出題",sub:"全ステップをまぜて",a:'data-act="mix"',p:""},
+    {n:6,t:"ステップごとの確認テスト",sub:"ステップ1〜5からそれぞれ5問出題。\nヒントなしで全文言えるか確かめよう！",a:'data-act="go" data-v="tests"',
+      bar:(()=>{let ok=0,tot=0;[1,2,3,4,5].forEach(i=>{tot+=STEP_TESTS[i].length;const x=store.tests&&store.tests["st"+i];if(x&&x.best)ok+=x.best});return[ok,tot]})()},
+    {n:7,t:"ランダム出題",sub:"全ステップからランダムで出題。",a:'data-act="mix"',p:""},
     {n:8,t:"総合確認テスト",sub:"ステップ5まで終わったら挑戦しよう！毎回ちがう問題が出ます",a:'data-act="test2"',
       p:(()=>{const x=store.tests&&store.tests.t2;return x&&x.last?`最高 ${x.best} / ${x.last.total}問`:""})()}
-  ].map(c=>`<button class="step" ${c.a} style="--tint:var(--soft)"><span class="sno">${c.n}</span>
-      <span class="sbody"><b>${esc(c.t)}</b><span class="ssub">${esc(c.sub)}</span>${c.p?`<span class="scount sp">${esc(c.p)}</span>`:""}</span>
+  ].map(c=>`<button class="step" ${c.a} style="--tint:var(--tint${c.n})"><span class="sno">${c.n}</span>
+      <span class="sbody"><b>${esc(c.t)}</b><span class="ssub">${esc(c.sub).replace(/\n/g,"<br>")}</span>${c.bar?`<span class="sprog"><span class="pbar"><i style="width:${c.bar[1]?Math.round(c.bar[0]/c.bar[1]*100):0}%"></i></span><span class="scount">${c.bar[0]} / ${c.bar[1]}</span></span>`:""}${c.p?`<span class="scount sp">${esc(c.p)}</span>`:""}</span>
       <span class="chev">${IC.chev}</span></button>`).join("")}</section>
   ${micBlocked&&!IOS_OTHER&&store.settings.judge==="mic"?`<div class="banner">この画面ではマイクが使えないため、「自分で判定」で進みます。</div>`:""}
   <p class="foot">たかしとれいちゃんの英語日和</p>`;
