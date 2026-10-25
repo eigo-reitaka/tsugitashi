@@ -866,7 +866,7 @@ function curLevel(){const open=LEVELS.filter(l=>l.ids.length);return(open.find(l
 function navTop(title,sub,back="home"){return`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">${esc(title)}${sub?`<small>${esc(sub)}</small>`:""}</div><span style="width:40px"></span></header>`}
 
 function renderHome(){
-  const cur=curLevel();const q=todayQ=buildToday();const first=BYID[q[0]];const started=Object.keys(store.sets).length>0;
+  const cur=curLevel();
   /* 各ステップのカードに載せる英文の見本（動画・アプリ内の例文から） */
   const SAMPLE={1:[["core","I had breakfast."]],2:WAYS[0].ex[0],3:WAYS[3].ex[0],4:WAYS[4].ex[1],
     5:[["core","I know a cafe"],["that","that has good coffee,"],["but","but it's a little far."]]};
@@ -878,7 +878,6 @@ function renderHome(){
       <span class="ssub">${esc(l.sub)}</span><span class="bar">${l.ids.map(id=>`<i class="${lastRes(id)||""}"></i>`).join("")}</span></span></button>`}).join("");
   const WIC=[IC.pin,IC.at,IC.target,IC.link,IC.user];
   app.innerHTML=`<header class="top"><div class="brand"><span class="logo"><i></i><i></i><i></i></span><b>つぎ足し英作文</b></div><button class="recbtn" data-act="go" data-v="record" aria-label="学習記録"><span class="round">${IC.chart}</span><small>学習記録</small></button></header>
-  <button class="pillbar" data-act="today"><span class="t"><b>${started?"続きから":"はじめる"}</b><span>今日の${q.length}問 ・ ${esc(first.jp)}</span></span><span class="go">${IC.play}</span></button>
   <section class="cats-row"><div class="sechead"><b>後ろから情報を足す5つのパターン</b></div>
     <div class="iconrow">${WAYS.map((w,i)=>`<button data-act="pattern" data-v="${i}">${WIC[i]}<span>${esc(w.short).replace("\n","<br>")}</span></button>`).join("")}</div></section>
   <div class="scards">${cards}</div>
