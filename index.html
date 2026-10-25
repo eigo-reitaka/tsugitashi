@@ -62,6 +62,8 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .logo i:nth-child(1){height:8px;opacity:.6}.logo i:nth-child(2){height:13px;opacity:.8}.logo i:nth-child(3){height:18px}
 .brand b{font-weight:700;font-size:20px;letter-spacing:-.01em}
 .round{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--bg);display:grid;place-items:center;flex-shrink:0}
+.recbtn{display:flex;flex-direction:column;align-items:center;gap:2px}
+.recbtn small{font-size:10.5px;color:var(--muted);line-height:1}
 .round svg{width:17px;height:17px}
 .top.bar{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px}
 .top.bar .navt{min-width:0;line-height:1.3;overflow-wrap:anywhere;text-align:center;font-weight:700;font-size:14.5px}
@@ -857,9 +859,9 @@ function renderHome(){
       <span class="smeta"><span class="srow"><b>${l.n}　${esc(l.name)}</b><span class="scount">${ok} / ${l.ids.length}</span></span>
       <span class="ssub">${esc(l.sub)}</span><span class="bar">${l.ids.map(id=>`<i class="${lastRes(id)||""}"></i>`).join("")}</span></span></button>`}).join("");
   const WIC=[IC.pin,IC.at,IC.target,IC.link,IC.user];
-  app.innerHTML=`<header class="top"><div class="brand"><span class="logo"><i></i><i></i><i></i></span><b>つぎ足し英作文</b></div><button class="round" data-act="go" data-v="record" aria-label="記録と設定">${IC.chart}</button></header>
+  app.innerHTML=`<header class="top"><div class="brand"><span class="logo"><i></i><i></i><i></i></span><b>つぎ足し英作文</b></div><button class="recbtn" data-act="go" data-v="record" aria-label="学習記録"><span class="round">${IC.chart}</span><small>学習記録</small></button></header>
   <button class="pillbar" data-act="today"><span class="t"><b>${started?"続きから":"はじめる"}</b><span>今日の${q.length}問 ・ ${esc(first.jp)}</span></span><span class="go">${IC.play}</span></button>
-  <section class="cats-row"><div class="sechead"><b>後ろから情報を足す5つのパターン</b><button data-act="go" data-v="library">見る ›</button></div>
+  <section class="cats-row"><div class="sechead"><b>後ろから情報を足す5つのパターン</b></div>
     <div class="iconrow">${WAYS.map((w,i)=>`<button data-act="pattern" data-v="${i}">${WIC[i]}<span>${esc(w.short).replace("\n","<br>")}</span></button>`).join("")}</div></section>
   <div class="scards">${cards}</div>
   <div class="rows">
@@ -903,9 +905,6 @@ function renderLevel(){
     inner=`<section class="glass panel"><h2>ステップ${l.n}　${l.name}</h2><p class="small">${desc}</p>
     <div class="cats">${CATS[l.n].map(c=>{const cids=SETS.filter(s=>s.lv===l.n&&s.cat===c.k).map(s=>s.id);
       return`<button class="cat" style="--c:var(${TY(c.k).c})" data-act="start" data-ids="${cids.join(",")}"><span class="nm"><i></i>${c.name}</span><span class="en">${c.en}</span>${marks(cids)}</button>`}).join("")}</div></section>`}
-  /* このステップの確認テスト */
-  inner+=`<section class="glass panel"><h2>ステップ${l.n}の確認テスト</h2><p class="small">練習が終わったら、ヒントなしで全文を言えるか確かめよう（${STEP_TESTS[l.n].length}問）</p>
-    <div class="li"><span class="q small">${testLine("st"+l.n)}</span><button class="chipbtn" data-act="steptest" data-v="${l.n}">受ける</button></div></section>`;
   /* 問題一覧：これまでの記録と「ここから始める」 */
   inner+=`<section class="glass panel"><h2>問題一覧</h2><p class="small">タップすると、その問題から始められます</p><div class="hist">${ids.map((id,i)=>{const r=lastRes(id);
     return`<button class="hrow ${i===nx?"next":""}" data-act="from" data-lv="${l.n}" data-i="${i}"><span class="hn">${i+1}</span><span class="q">${esc(BYID[id].jp)}</span>${i===nx?'<span class="pill">次はここから</span>':`<span class="chip ${r||"none"}">${r?RES_LABEL[r]:"未挑戦"}</span>`}</button>`}).join("")}</div></section>`;
