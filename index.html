@@ -232,7 +232,8 @@ const TYPES={
   because:{l:"なぜなら",c:"--t-reason"}, when:{l:"〜とき",c:"--t-cond"}, if:{l:"もし",c:"--t-cond"},
   that:{l:"どんな（that）",c:"--t-desc"}, who:{l:"どんな人（who）",c:"--t-desc"},
   about:{l:"〜について",c:"--t-with"}, from:{l:"〜から",c:"--t-place"}, to:{l:"〜に（相手）",c:"--t-by"},
-  before:{l:"〜の前に",c:"--t-time"}, after:{l:"〜の後に",c:"--t-time"}, until:{l:"〜まで",c:"--t-for"}, without:{l:"〜なしで",c:"--t-purpose"}
+  before:{l:"〜の前に",c:"--t-time"}, after:{l:"〜の後に",c:"--t-time"}, until:{l:"〜まで",c:"--t-for"}, without:{l:"〜なしで",c:"--t-purpose"},
+  prep:{l:"前置詞",c:"--t-with"}, mix:{l:"総合",c:"--t-core"}, mix2:{l:"まとめ",c:"--t-core"}, mix3:{l:"まとめ",c:"--t-core"}, mix4:{l:"まとめ",c:"--t-core"}
 };
 const COMMA=new Set(["and","but","so"]);
 const CATS={
@@ -617,7 +618,8 @@ const IC={
   key:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h1M10.5 10h1M14.5 10h1M17.5 10h.5M7 14h10"/></svg>',
   shuf:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h4v4M4 20L20 4M20 16v4h-4M15 15l5 5M4 4l5 5"/></svg>'
 };
-function chunk(t,txt,{isNew=false,jp=false,ghost=false}={}){const T=TYPES[t];return`<span class="chunk${isNew?" new":""}${jp?" jp":""}${ghost?" ghost":""}" style="--c:var(${T.c})"><span class="tag">${T.l}</span><span class="txt${jp?"":" en"}">${esc(txt)}</span></span>`}
+const TY=k=>TYPES[k]||{l:"",c:"--t-core"};
+function chunk(t,txt,{isNew=false,jp=false,ghost=false}={}){const T=TY(t);return`<span class="chunk${isNew?" new":""}${jp?" jp":""}${ghost?" ghost":""}" style="--c:var(${T.c})"><span class="tag">${T.l}</span><span class="txt${jp?"":" en"}">${esc(txt)}</span></span>`}
 const PLUS='<span class="plus">+</span>';
 let view="home",sess=null,st=null,banner="",lvView=1;
 
@@ -656,7 +658,7 @@ function renderHome(){
       <span class="right">${locked?`<span class="lockico">${IC.lock}</span>準備中`:`${l.n===cur?'<span class="pill">いまここ</span>':""}<span>${ok} / ${l.ids.length}</span>`}</span></button>`}).join("");
   app.innerHTML=`<header class="top"><div class="brand"><span class="logo"><i></i><i></i><i></i></span><b>つぎ足し英作文</b></div><button class="round" data-act="go" data-v="record" aria-label="記録と設定">${IC.chart}</button></header>
   <button class="glass ways" data-act="go" data-v="library"><span class="head"><span>後ろから情報を足す5つのパターン</span><span>見る ›</span></span>
-    <span class="row5">${WAYS.map(w=>`<span class="w" style="--c:var(${TYPES[w.t].c})"><i></i><span>${esc(w.short).replace("\n","<br>")}</span></span>`).join("")}</span></button>
+    <span class="row5">${WAYS.map(w=>`<span class="w" style="--c:var(${TY(w.t).c})"><i></i><span>${esc(w.short).replace("\n","<br>")}</span></span>`).join("")}</span></button>
   <div class="stairs">${stairs}</div>
   <button class="cta" data-act="today"><span class="playc">${IC.play}</span><span class="t"><b>${started?"続きから":"はじめる"}</b><span>今日の${q.length}問 ・ ${esc(first.jp)}</span></span><span aria-hidden="true">›</span></button>
   <div class="tiles">
@@ -689,7 +691,7 @@ function renderLevel(){
   else{const desc={2:"結論の文を言ってから、情報を1つずつ後ろに足します。",3:"短い文を言ってから、and・but・soなどで次の話をつなぎます。",4:"人や物を言ってから、that・whoで説明を足します。",5:"ここまでの足し方を全部組み合わせて、長い文を組み立てます。"}[l.n];
     inner=`<section class="glass panel"><h2>ステップ${l.n}　${l.name}</h2><p class="small">${desc}</p>
     <div class="cats">${CATS[l.n].map(c=>{const ids=SETS.filter(s=>s.lv===l.n&&s.cat===c.k).map(s=>s.id);
-      return`<button class="cat" style="--c:var(${TYPES[c.k].c})" data-act="start" data-ids="${ids.join(",")}"><span class="nm"><i></i>${c.name}</span><span class="en">${c.en}</span>${marks(ids)}</button>`}).join("")}</div></section>`}
+      return`<button class="cat" style="--c:var(${TY(c.k).c})" data-act="start" data-ids="${ids.join(",")}"><span class="nm"><i></i>${c.name}</span><span class="en">${c.en}</span>${marks(ids)}</button>`}).join("")}</div></section>`}
   app.innerHTML=navTop("ステップ"+l.n,l.ids.filter(id=>lastRes(id)==="ok").length+" / "+l.ids.length)+inner+
   `<div class="dock"><button class="big lite" data-act="random" data-lv="${l.n}">ランダム5問</button><button class="big" data-act="start" data-ids="${l.ids.join(",")}">順番に練習</button></div>`;
 }
@@ -698,13 +700,13 @@ function renderLibrary(){
   app.innerHTML=navTop("5つのパターン")+`
   <div class="qhead"><h2>後ろから情報を足す5つのパターン</h2></div>
   <p class="small" style="text-align:center">まず短く言って、後ろに足す。▶で英文を聞けます。</p>
-  ${WAYS.map((w,i)=>`<section class="way" style="--c:var(${TYPES[w.t].c})"><div class="wh"><b>${i+1}．${esc(w.name)}</b><span class="small">${w.lv}</span></div>
+  ${WAYS.map((w,i)=>`<section class="way" style="--c:var(${TY(w.t).c})"><div class="wh"><b>${i+1}．${esc(w.name)}</b><span class="small">${w.lv}</span></div>
     ${w.ex.map(ex=>{const full=ex.map(p=>p[1]).join(" ");return`<div class="ex">${ex.map((p,j)=>(j?PLUS:"")+chunk(p[0],p[1])).join("")}<button class="play" data-act="play" data-t="${esc(full)}" aria-label="再生">${IC.spk}</button></div>`}).join("")}
   </section>`).join("")}
   <p class="foot">それぞれの練習は、ホームのステップから選べます</p>`;
 }
 
-function stepLabel(set,k,i){if(k==="pick")return"結論を選ぶ";if(k==="core")return"結論を英語に";if(k==="add")return"＋"+TYPES[set.adds[i].t].l;if(k==="full")return"通しで言う";return""}
+function stepLabel(set,k,i){if(k==="pick")return"結論を選ぶ";if(k==="core")return"結論を英語に";if(k==="add")return"＋"+TY(set.adds[i].t).l;if(k==="full")return"通しで言う";return""}
 function dkey(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 function renderRecord(){
   const ids=Object.keys(store.sets).filter(id=>BYID[id]);const ok=ids.filter(id=>lastRes(id)==="ok").length;
@@ -807,7 +809,7 @@ function renderPractice(){
     dock=`<button class="big" data-act="finishSet">${sess.i+1<sess.ids.length?"次の問題へ":"結果を見る"}</button>`;
   }else{
     if(s.k==="core"){h2="結論の文を英語で";sub="「"+set.coreJp+"」"}
-    if(s.k==="add"){const a=set.adds[s.i];h2="後ろに「"+a.jp+"」を足そう";sub=TYPES[a.t].l+"を足す　"+(s.i+1)+" / "+set.adds.length}
+    if(s.k==="add"){const a=set.adds[s.i];h2="後ろに「"+a.jp+"」を足そう";sub=TY(a.t).l+"を足す　"+(s.i+1)+" / "+set.adds.length}
     if(s.k==="full"){h2=isTest()?"英語で言ってみよう":"最初から通して言おう";sub=isTest()?"まず結論を言って、後ろに足していく":"ヒントなしで挑戦"}
     if(st.ph==="choose"){h2="どうやって練習する？";sub="このあとの問題も同じ方法で進みます。右上のボタンでいつでも切り替えられます"}
     const hl=hintList(),hs=hl.slice(0,st.hint).map(h=>`<div class="note hi">${h}</div>`).join("");
