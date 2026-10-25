@@ -199,6 +199,11 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .in-steps li::before{content:counter(s);grid-row:span 2;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--f-en);font-weight:700;font-size:13px}
 .in-steps b{font-size:15px}
 .in-steps span{font-size:12.5px;color:var(--muted)}
+.in-notes{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;width:100%}
+.in-notes li{display:grid;grid-template-columns:22px 1fr;column-gap:10px;background:var(--bg);border-radius:12px;padding:11px 14px}
+.in-notes li::before{content:"✓";grid-row:span 2;width:20px;height:20px;margin-top:1px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-size:11px;font-weight:700}
+.in-notes b{font-size:14.5px}
+.in-notes span{font-size:12.5px;color:var(--muted);line-height:1.55}
 .in-body p{margin:0 0 10px;font-size:15px;line-height:1.75}
 .in-body b{font-weight:700}
 /* 英文のかたまり */
@@ -1190,7 +1195,10 @@ function renderIntro(){
      b:`<p>長い文も、いきなり全部を英語にしません。</p><p>まず短い「結論」の文を言ってから、どこで・いつ・誰と…と<b>後ろに情報を足していきます</b>。動画で練習したのと同じやり方です。</p>`},
     {t:"1問はこう進みます",
      viz:`<ol class="in-steps"><li><b>英語にする</b><span>結論の文だけを英語で言う</span></li><li><b>後ろに足す</b><span>情報を1つずつ足していく</span></li><li><b>通しで言う</b><span>最後に、最初から全部言う</span></li></ol>`,
-     b:`<p>声に出すか、タイピングかは最初の問題で選べます。声に出すときは、はじめにマイクの使用を聞かれるので「許可」を押してください。</p><p>分からないときは、ヒントや「答えを見る」を使って大丈夫です。</p>`},
+     b:`<p>声に出すか、タイピングかは最初の問題で選べます。</p><p>分からないときは、ヒントや「答えを見る」を使って大丈夫です。</p>`},
+    {t:"声で練習するときの注意",
+     viz:`<ul class="in-notes"><li><b>Safari か Chrome で開く</b><span>LINEやInstagramの中で開くと、マイクが使えないことがあります</span></li><li><b>マイクは「許可」を押す</b><span>最初に聞かれたら「許可」。間違えて断ったときは、ブラウザの設定で許可に戻せます</span></li><li><b>iPhoneは「音声入力」をオンに</b><span>設定 →「一般」→「キーボード」→「音声入力」がオフだと、声を聞き取れません</span></li><li><b>電波のよい場所で</b><span>声の聞き取りにはインターネットを使います</span></li></ul>`,
+     b:`<p>うまく反応しないときは、タイピングで練習するか、「自分で判定」に切り替えても進められます。</p>`},
     {t:"おすすめの進め方",
      viz:`<ol class="in-steps"><li><b>ステップ1から順番に</b><span>今いるステップに「いまここ」が付きます</span></li><li><b>ステップごとの確認テスト</b><span>ヒントなしで、一発で全文を言えるか確かめる</span></li><li><b>学習記録で復習</b><span>止まったところから、もう一度練習できます</span></li></ol>`,
      b:`<p>1日数問でも大丈夫です。続けるうちに、短く言って後ろに足す感覚が身についていきます。</p>`}];
