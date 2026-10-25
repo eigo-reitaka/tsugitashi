@@ -281,6 +281,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .big:disabled{background:var(--line2);color:var(--faint);cursor:default}
 .big.lite{background:none;color:var(--ink);min-width:0;padding:14px 4px;text-decoration:underline;font-weight:500;margin-right:auto}
 .choose{display:flex;flex-direction:column;gap:10px;margin-top:auto}
+#app>.choose{margin-top:8px}
 .pickm{display:flex;gap:14px;align-items:center;text-align:left;padding:16px;border-radius:12px;border:1px solid var(--line)}
 .pickm.last{border:2px solid var(--ink);padding:15px}
 .pickm .ic{width:44px;height:44px;border-radius:50%;background:var(--soft);display:grid;place-items:center;flex-shrink:0}
@@ -1097,7 +1098,7 @@ function renderPractice(){
     }else if(inputMode()==="type"){
       stage+=`<div class="typewrap"><label class="small" for="ans">英語で入力してください</label>
         <input id="ans" class="en" type="text" value="${esc(st.typed||"")}" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" lang="en" enterkeyhint="done" placeholder="${s.k==="add"?"続きだけでも、最初からでもOK":""}"></div>`;
-      if(st.ph==="retry")stage+=`<div class="note hi">惜しい！足りない単語か、違う単語があります。直してもう一度。</div>`;
+      if(st.ph==="retry")stage+=`<div class="note hi">惜しいです！単語が足りないか、違う単語があります。<br>分からない場合は答え合わせに進みましょう👍️✨️<br>正解するより、まずはどんどん進めることがオススメです。</div>`;
       dock=`<button class="big lite" data-act="giveup">答えを見る</button><button class="big" data-act="typecheck">答え合わせ</button>`;
     }else if(mode==="mic"){
       const lis=st.ph==="listening";
@@ -1118,9 +1119,9 @@ function renderPractice(){
     if(st.ph!=="choose")under+=`<div class="seg glass"><button class="${R===0.75?"on":""}" data-act="rate" data-v="0.75">ゆっくり</button><button class="${R===0.9?"on":""}" data-act="rate" data-v="0.9">ふつう</button></div>`;
   }
   app.innerHTML=`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">${esc(lvl)}<small>${sess.i+1} / ${sess.ids.length}</small></div><button class="round" data-act="input" data-v="${inputMode()==="type"?"voice":"type"}" aria-label="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}" title="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}">${inputMode()==="type"?IC.mic:IC.key}</button></header>
-  ${tabsHTML()}
+  ${st.ph==="choose"?"":tabsHTML()}
   <div class="qhead"><h2>${esc(h2)}</h2><p>${esc(sub)}</p></div>
-  <section class="glass stage">${promptHTML(set,s)}${stage}</section>
+  ${st.ph==="choose"?stage:`<section class="glass stage">${promptHTML(set,s)}${stage}</section>`}
   ${under}
   ${banner?`<div class="banner">${esc(banner)}</div>`:""}
   ${inputMode()==="voice"&&st.si===0?safariNote():""}
@@ -1213,6 +1214,7 @@ function focusAns(){const el=document.getElementById("ans");if(el){el.focus();co
 function typeCheck(){const v=(document.getElementById("ans")?.value||"").trim();if(!v){focusAns();return}
   st.typed=v;st.heard=v;st.via="type";
   if(passes([v],stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
+  else if(st.ph==="retry"){setResult("ng");st.ph="revealed";render()}
   else{st.ph="retry";render();focusAns()}}
 app.addEventListener("input",e=>{if(e.target.id==="ans"&&st)st.typed=e.target.value});
 app.addEventListener("keydown",e=>{if(e.target.id==="ans"&&e.key==="Enter"&&!e.isComposing){e.preventDefault();typeCheck()}});
