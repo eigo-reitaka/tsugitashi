@@ -100,6 +100,8 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 /* ホーム：ステップのカード */
 .steps{display:flex;flex-direction:column;gap:10px}
 .step{display:grid;grid-template-columns:44px minmax(0,1fr) 18px;align-items:center;gap:12px;width:100%;text-align:left;background:var(--tint);border-radius:16px;padding:16px 14px 16px 16px;border:2px solid transparent}
+.steps.more .step{border-color:var(--line2)}
+.step .scount.sp{margin-top:4px}
 .step.cur{border-color:var(--ink)}
 .step .sno{width:44px;height:44px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-family:var(--f-en);font-weight:700;font-size:20px}
 .step .sbody{display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -905,11 +907,15 @@ function renderHome(){
   <section class="steps"><div class="sechead"><b>ステップ1から順番に練習しよう</b></div>${cards}</section>
   <section class="cats-row"><div class="sechead col"><b>後ろから情報を足す5つのパターンの解説</b><span class="secnote">※マークを押すと解説が見れます！</span></div>
     <div class="iconrow">${WAYS.map((w,i)=>`<button data-act="pattern" data-v="${i}">${WIC[i]}<span>${esc(w.short).replace("\n","<br>")}</span></button>`).join("")}</div></section>
-  <div class="rows">
-    <button class="row" data-act="mix"><span class="ic">${IC.shuf}</span><span><b>ランダム出題</b><span>全ステップをまぜて</span></span><span class="chev">${IC.chev}</span></button>
-    <button class="row" data-act="go" data-v="tests"><span class="ic">${IC.check}</span><span><b>ステップごとの確認テスト</b><span>ステップ1〜5、それぞれ5問。ヒントなしで全文を言えるか確かめよう</span></span><span class="chev">${IC.chev}</span></button>
-    <button class="row" data-act="test2"><span class="ic">${IC.check}</span><span><b>総合確認テスト</b><span>ステップ5まで終わったら挑戦しよう！毎回ちがう問題が出ます</span></span><span class="chev">${IC.chev}</span></button>
-  </div>
+  <section class="steps more">${[
+    {n:6,t:"ステップごとの確認テスト",sub:"ステップ1〜5、それぞれ5問。ヒントなしで全文を言えるか確かめよう",a:'data-act="go" data-v="tests"',
+      p:(()=>{const k=[1,2,3,4,5].filter(i=>store.tests&&store.tests["st"+i]&&store.tests["st"+i].last).length;return`受けたテスト ${k} / 5`})()},
+    {n:7,t:"ランダム出題",sub:"全ステップをまぜて",a:'data-act="mix"',p:""},
+    {n:8,t:"総合確認テスト",sub:"ステップ5まで終わったら挑戦しよう！毎回ちがう問題が出ます",a:'data-act="test2"',
+      p:(()=>{const x=store.tests&&store.tests.t2;return x&&x.last?`最高 ${x.best} / ${x.last.total}問`:""})()}
+  ].map(c=>`<button class="step" ${c.a} style="--tint:var(--soft)"><span class="sno">${c.n}</span>
+      <span class="sbody"><b>${esc(c.t)}</b><span class="ssub">${esc(c.sub)}</span>${c.p?`<span class="scount sp">${esc(c.p)}</span>`:""}</span>
+      <span class="chev">${IC.chev}</span></button>`).join("")}</section>
   ${micBlocked&&!IOS_OTHER&&store.settings.judge==="mic"?`<div class="banner">この画面ではマイクが使えないため、「自分で判定」で進みます。</div>`:""}
   <p class="foot">たかしとれいちゃんの英語日和</p>`;
 }
