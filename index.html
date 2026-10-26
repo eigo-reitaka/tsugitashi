@@ -49,7 +49,9 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .en{font-family:var(--f-en)}
 .glass{background:var(--bg);border:1px solid var(--line);border-radius:var(--r)}
-.cl{display:inline-block;max-width:100%}.cl.flow{display:inline}
+/* 改行位置調整用のかたまり：見た目は親の文字の設定をそのまま受け継ぐ（ほかの「span」向けの指定の影響を受けない） */
+.jt,.cl{font-size:inherit!important;color:inherit!important;font-weight:inherit!important;line-height:inherit!important;font-family:inherit!important;margin:0!important}
+.jt{display:inline!important}.cl{display:inline-block!important;max-width:100%}.cl.flow{display:inline!important}
 .small{font-size:12.5px;color:var(--muted);margin:0}
 .foot{color:var(--muted);font-size:12px;text-align:center;padding-bottom:28px;margin:0}
 .banner.safari{display:flex;flex-direction:column;gap:6px;color:var(--ink);background:var(--tint1)}
