@@ -49,7 +49,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .en{font-family:var(--f-en)}
 .glass{background:var(--bg);border:1px solid var(--line);border-radius:var(--r)}
-.cl{display:inline-block;max-width:100%}
+.cl{display:inline-block;max-width:100%}.cl.flow{display:inline}
 .small{font-size:12.5px;color:var(--muted);margin:0}
 .foot{color:var(--muted);font-size:12px;text-align:center;padding-bottom:28px;margin:0}
 .banner.safari{display:flex;flex-direction:column;gap:6px;color:var(--ink);background:var(--tint1)}
@@ -156,6 +156,9 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .panel.glass{border:0;border-radius:0;padding:0 0 22px;border-bottom:1px solid var(--line2)}
 .panel.glass h2{font-size:20px}
 .dock:empty{display:none}
+.dock.three{gap:8px}.dock.three .big{min-width:0;flex:1 1 0;padding:14px 6px;font-size:14.5px;white-space:nowrap}.dock.three .big.lite{flex:0 0 auto;padding:14px 2px}
+.dock.three .big small{display:block;font-size:11px;font-weight:500;opacity:.9;margin-top:1px}
+.big.out{background:none;color:var(--ink);border:1.5px solid var(--ink)}
 .cats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .cat{border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;text-align:left;display:flex;flex-direction:column;gap:4px}
 .cat .nm{font-weight:700;font-size:14px;display:flex;gap:7px;align-items:flex-start}
@@ -916,6 +919,9 @@ function addWbr(root){brify(root);fixSlash(root);
     const box=document.createElement("span");box.className="jt";
     for(const x of parts){if(!x.trim()){box.append(x);continue}const c=document.createElement("span");c.className="cl";c.append(wbrFrag(x));box.append(c)}
     n.replaceWith(box)}
+  /* 1行に収まらない長いかたまりは、ふつうの文として流す（「今朝、」だけが1行に残るのを防ぐ） */
+  root.querySelectorAll(".cl").forEach(c=>{const cs=getComputedStyle(c);const lh=parseFloat(cs.lineHeight)||parseFloat(cs.fontSize)*1.6;
+    if(c.offsetHeight>lh*1.5)c.classList.add("flow")})
 }
 function lastRes(id){return store.sets[id]?.last?.res||null}
 function curLevel(){const open=LEVELS.filter(l=>l.ids.length);return(open.find(l=>l.ids.some(id=>lastRes(id)!=="ok"))||open[open.length-1]).n}
@@ -929,7 +935,7 @@ function renderHome(){
   const cards=LEVELS.map(l=>{const ok=l.ids.filter(id=>lastRes(id)==="ok").length,m=l.name.match(/^(.*?) (レベル\d)$/);
     return`<button class="step ${l.n===cur?"cur":""}" data-act="level" data-v="${l.n}" style="--tint:var(--tint${l.n})">
       <span class="sno">${l.n}</span>
-      <span class="sbody">${l.n===cur?'<span class="badge">いまここ</span>':""}<b>${m?`${esc(m[1])}<span class="lvtag">${m[2]}</span>`:esc(l.name)}</b>
+      <span class="sbody">${l.n===cur?'<span class="badge">続きから</span>':""}<b>${m?`${esc(m[1])}<span class="lvtag">${m[2]}</span>`:esc(l.name)}</b>
         <span class="ssub">${esc(l.sub)}</span>
         <span class="sprog"><span class="pbar"><i style="width:${l.ids.length?Math.round(ok/l.ids.length*100):0}%"></i></span><span class="scount">${ok} / ${l.ids.length}</span></span></span>
       <span class="chev">${IC.chev}</span></button>`}).join("");
@@ -978,7 +984,7 @@ function nextIndex(ids){let i=ids.findIndex(id=>!store.sets[id]);if(i<0)i=ids.fi
 function renderLevel(){
   const l=LEVELS[lvView-1];const ids=l.ids;const nx=nextIndex(ids);
   let inner="";
-  if(l.n===1){inner=`<section class="glass panel"><h2>ステップ1　まず結論を言う</h2><p class="small">日本語から「結論」を選んで、その短い文だけを英語にします。いつ・どこで・どんな、は後回し。</p>${marks(ids)}</section>`}
+  if(l.n===1){inner=`<section class="glass panel"><h2>ステップ1　まず結論を言う</h2><p class="small">日本語から「結論」を選びます。いつ・どこで・どんな、は後回し。</p>${marks(ids)}</section>`}
   else{const desc={2:"結論の文を言ってから、情報を1つずつ後ろに足します。",3:"短い文を言ってから、and・but・soなどで次の話をつなぎます。",4:"人や物を言ってから、that・whoで説明を足します。",5:"ここまでの足し方を全部組み合わせて、長い文を組み立てます。"}[l.n];
     inner=`<section class="glass panel"><h2>ステップ${l.n}　${l.name}</h2><p class="small">${desc}</p>
     <div class="cats">${CATS[l.n].map(c=>{const cids=SETS.filter(s=>s.lv===l.n&&s.cat===c.k).map(s=>s.id);
@@ -987,7 +993,7 @@ function renderLevel(){
   inner+=`<section class="glass panel"><h2>問題一覧</h2><p class="small">タップすると、その問題から始められます</p><div class="hist">${ids.map((id,i)=>{const r=lastRes(id);
     return`<button class="hrow ${i===nx?"next":""}" data-act="from" data-lv="${l.n}" data-i="${i}"><span class="hn">${i+1}</span><span class="q">${esc(BYID[id].jp)}</span>${i===nx?'<span class="pill">次はここから</span>':`<span class="chip ${r||"none"}">${r?RES_LABEL[r]:"未挑戦"}</span>`}</button>`}).join("")}</div></section>`;
   app.innerHTML=navTop("ステップ"+l.n,ids.filter(id=>lastRes(id)==="ok").length+" / "+ids.length)+inner+
-  `<div class="dock"><button class="big lite" data-act="random" data-lv="${l.n}">ランダム5問</button>${nx>0?`<button class="big" data-act="from" data-lv="${l.n}" data-i="${nx}">続きから（${nx+1}問目）</button>`:`<button class="big" data-act="start" data-ids="${ids.join(",")}">順番に練習</button>`}</div>`;
+  `<div class="dock three"><button class="big lite" data-act="random" data-lv="${l.n}">ランダム5問</button><button class="big out" data-act="start" data-ids="${ids.join(",")}">最初から</button><button class="big" data-act="from" data-lv="${l.n}" data-i="${Math.max(nx,0)}">続きから<small>${Math.max(nx,0)+1}問目から</small></button></div>`;
 }
 
 function renderLibrary(){
@@ -1036,17 +1042,19 @@ function renderRecord(){
 let backTo="home";
 let navStack=[],todayQ=null;
 /* 1つ戻る：練習中は1段階前へ（最初の段階なら練習前の画面へ）、それ以外は1つ前の画面へ */
+/* 練習中の「戻る」用に、画面が切り替わる直前の状態を覚えておく */
+let phist=[];
+function snap(){if(sess&&st)phist.push({i:sess.i,resLen:sess.res.length,chosen:sess.chosen,st:{...st,res:{...st.res},picked:[...(st.picked||[])]}})}
 function goBack(){stopRec();banner="";
-  if(view==="practice"&&st&&st.si>0){delete st.res[st.si];st.si--;delete st.res[st.si];
-    Object.assign(st,{ph:"ready",hint:0,heard:"",typed:"",via:""});if(curStep().k==="pick")st.picked=[];
-    render();window.scrollTo(0,0);if(inputMode()==="type"&&curStep().k!=="pick")focusAns();return}
+  if((view==="practice"||view==="summary")&&phist.length){const h=phist.pop();
+    sess.i=h.i;sess.res.length=h.resLen;sess.chosen=h.chosen;st=h.st;view="practice";render();window.scrollTo(0,0);return}
   if(view==="practice"||view==="summary"){view=backTo||"home";render();window.scrollTo(0,0);return}
   view=navStack.pop()||"home";render();window.scrollTo(0,0)}
-function startSession(ids,mode="practice"){backTo=view==="practice"||view==="summary"?backTo:view;sess={ids,i:0,res:[],chosen:false,mode};startSet();view="practice";render();window.scrollTo(0,0)}
+function startSession(ids,mode="practice"){phist=[];backTo=view==="practice"||view==="summary"?backTo:view;sess={ids,i:0,res:[],chosen:false,mode};startSet();view="practice";render();window.scrollTo(0,0)}
 function startSet(){
   const set=BYID[sess.ids[sess.i]];
   /* ステップ1だけ「結論を選ぶ」から。ステップ2以降は英語にするところから */
-  const steps=(isTest()||sess.direct)?[{k:"full"}]:set.lv===1?[{k:"pick"},{k:"core"},{k:"preview"}]:[{k:"core"}];
+  const steps=(isTest()||sess.direct)?[{k:"full"}]:set.lv===1?[{k:"pick"}]:[{k:"core"}];
   if(!isTest()&&!sess.direct&&set.lv!==1){set.adds.forEach((a,i)=>steps.push({k:"add",i}));steps.push({k:"full"})}
   const opts=shuffle([{t:set.coreJp,ok:true},{t:set.jp,why:"full"},...(set.adds.length?[{t:set.adds[0].jp,why:"detail"}]:[])]);
   st={set,steps,si:0,res:{},opts,picked:[],ph:"ready",hint:0,heard:""};
@@ -1069,7 +1077,7 @@ function hintList(){const s=curStep(),set=st.set;
   return[]}
 function builtHTML(){
   const set=st.set,s=curStep(),done=DONE.includes(st.ph)||st.ph==="selfcheck";
-  if(s.k==="core"&&!done)return`<div class="sent"><span class="small">ここに英文ができていきます</span></div>`;
+  if(s.k==="core"&&!done)return"";
   if(s.k==="full"&&!done)return`<div class="sent"><span class="small">ヒントなしで、最初から言ってみよう</span></div>`;
   const parts=[chunk("core",dispText(set,-1),{isNew:s.k==="core"})];
   set.adds.forEach((a,i)=>{
@@ -1083,7 +1091,8 @@ function tabsHTML(){
   const set=st.set,s=curStep();
   if(isTest())return`<div class="tabs glass"><span class="tab cur"><i>!</i>ヒントなしで、最初から全部言う</span></div>`;
   if(sess.direct)return`<div class="tabs glass"><span class="tab cur"><i>!</i>いきなり全文を言う</span></div>`;
-  const names=set.lv===1?["結論を選ぶ","英語にする","まとめ"]:["英語にする","後ろに足す","通しで言う"];
+  if(set.lv===1)return`<div class="tabs glass"><span class="tab cur"><i>1</i>日本語から結論を選ぶ</span></div>`;
+  const names=["英語にする","後ろに足す","通しで言う"];
   const idx=k=>set.lv===1?({pick:0,core:1,preview:2})[k]:({core:0,add:1,full:2})[k];
   const ci=idx(s.k);
   return`<div class="tabs glass">${names.map((n,i)=>`<span class="tab ${i<ci?"done":i===ci?"cur":""}"><i>${i<ci?"✓":i+1}</i>${n}</span>`).join("")}</div>`;
@@ -1098,7 +1107,7 @@ function renderPractice(){
     stage=`<div class="opts">${st.opts.map((o,i)=>{const p=st.picked.includes(o);return`<button class="opt ${p?(o.ok?"right":"wrong"):""}" data-act="pick" data-i="${i}" ${solved?"disabled":""}>${esc(o.t)}</button>`}).join("")}</div>`;
     if(last&&!last.ok)stage+=`<div class="note ng">${last.why==="full"?"それは全部です。いきなり全部を英語にせず、まずは短い結論だけ。":"「"+esc(last.t)+"」は、あとで後ろに足す情報です。"}</div>`;
     if(solved)stage+=`<div class="note ok">まずは「${esc(set.coreJp)}」から。${set.adds.map(a=>"「"+esc(a.jp)+"」").join("")}は、あとで足します。</div>`;
-    dock=`<button class="big" data-act="next" ${solved?"":"disabled"}>${solved?"英語にしてみる":"結論を選んでください"}</button>`;
+    dock=`<button class="big" data-act="next" ${solved?"":"disabled"}>${solved?(sess.i+1<sess.ids.length?"次の問題へ":"結果を見る"):"結論を選んでください"}</button>`;
   }else if(s.k==="preview"){
     h2="結論の文が言えました";sub="残りは、後ろに足していく情報です";
     stage=`<div class="sent">${chunk("core",strip(set.core))}${set.adds.map(a=>plusChunk(a.t,a.jp,{jp:true,ghost:true})).join("")}</div>
@@ -1130,7 +1139,7 @@ function renderPractice(){
     }else if(inputMode()==="type"){
       stage+=`<div class="typewrap"><label class="small" for="ans">英語で入力してください</label>
         <input id="ans" class="en" type="text" value="${esc(st.typed||"")}" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" lang="en" enterkeyhint="done" placeholder="${s.k==="add"?"続きだけでも、最初からでもOK":""}"></div>`;
-      if(st.ph==="retry")stage+=`<div class="note hi">惜しいです！単語が足りないか、違う単語があります。<br>分からない場合は答え合わせに進みましょう👍️✨️<br>正解するより、まずはどんどん進めることがオススメです。</div>`;
+      if(st.ph==="retry")stage+=`<div class="note hi">惜しいです！単語が足りないか、違う単語があります。<br>分からない場合は「答えを見る」に進みましょう👍️✨️<br>正解するより、まずはどんどん進めることがオススメです。</div>`;
       dock=`<button class="big lite" data-act="giveup">答えを見る</button><button class="big" data-act="typecheck">答え合わせ</button>`;
     }else if(mode==="mic"){
       const lis=st.ph==="listening";
@@ -1144,13 +1153,13 @@ function renderPractice(){
     }
     if(st.ph!=="choose"&&!DONE.includes(st.ph)&&st.ph!=="selfcheck"){
       const acts=[];if(st.hint<hl.length)acts.push(`<button class="chipbtn" data-act="hint">ヒント${hl.length>1?`（${st.hint+1}/${hl.length}）`:""}</button>`);
-      if(st.ph==="retry")acts.push(`<button class="ghost" data-act="override">${inputMode()==="type"?"合っているはずなのに判定されなかった":"言えていたのに判定されなかった"}</button>`);
+      if(st.ph==="retry"&&inputMode()!=="type")acts.push(`<button class="ghost" data-act="override">言えていたのに判定されなかった</button>`);
       under=acts.length?`<div class="subacts">${acts.join("")}</div>`:"";
     }
     const R=store.settings.rate;
-    if(st.ph!=="choose")under+=`<div class="seg glass"><button class="${R===0.75?"on":""}" data-act="rate" data-v="0.75">ゆっくり</button><button class="${R===0.9?"on":""}" data-act="rate" data-v="0.9">ふつう</button></div>`;
+    if(DONE.includes(st.ph)||st.ph==="selfcheck")under+=`<div class="seg glass"><button class="${R===0.75?"on":""}" data-act="rate" data-v="0.75">ゆっくり</button><button class="${R===0.9?"on":""}" data-act="rate" data-v="0.9">ふつう</button></div>`;
   }
-  app.innerHTML=`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">${esc(lvl)}<small>${sess.i+1} / ${sess.ids.length}</small></div><button class="round" data-act="input" data-v="${inputMode()==="type"?"voice":"type"}" aria-label="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}" title="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}">${inputMode()==="type"?IC.mic:IC.key}</button></header>
+  app.innerHTML=`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">${esc(lvl)}<small>${sess.i+1} / ${sess.ids.length}</small></div>${s.k==="pick"?'<span style="width:40px"></span>':`<button class="round" data-act="input" data-v="${inputMode()==="type"?"voice":"type"}" aria-label="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}" title="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}">${inputMode()==="type"?IC.mic:IC.key}</button>`}</header>
   ${st.ph==="choose"?"":tabsHTML()}
   <div class="qhead"><h2>${esc(h2)}</h2><p>${esc(sub)}</p></div>
   ${st.ph==="choose"?stage:`<section class="glass stage">${promptHTML(set,s)}${stage}</section>`}
@@ -1218,10 +1227,10 @@ app.addEventListener("click",async e=>{
   else if(act==="rate"){store.settings.rate=+b.dataset.v;save();render();if(view!=="practice")speak("I had breakfast at the hotel this morning.")}
   else if(act==="quit"){stopRec();view=backTo||"home";render()}
   else if(act==="pick"){const o=st.opts[+b.dataset.i];if(st.picked.includes(o))return;st.picked.push(o);if(o.ok)setResult(st.picked.length===1?"ok":"hint");render()}
-  else if(act==="next"){st.si++;st.ph="ready";st.hint=0;st.heard="";st.typed="";st.via="";banner="";if(st.si>=st.steps.length)return finishSet();
+  else if(act==="next"){snap();st.si++;st.ph="ready";st.hint=0;st.heard="";st.typed="";st.via="";banner="";if(st.si>=st.steps.length)return finishSet();
     if(["core","full"].includes(curStep().k)&&!sess.chosen)st.ph="choose";render();if(st.ph==="ready"&&inputMode()==="type")focusAns()}
-  else if(act==="choose"){store.settings.input=b.dataset.v;save();sess.chosen=true;st.ph="ready";render();if(inputMode()==="type")focusAns()}
-  else if(act==="finishSet"){finishSet()}
+  else if(act==="choose"){snap();store.settings.input=b.dataset.v;save();sess.chosen=true;st.ph="ready";render();if(inputMode()==="type")focusAns()}
+  else if(act==="finishSet"){snap();finishSet()}
   else if(act==="play"){speak(b.dataset.t)}
   else if(act==="hint"){st.hint++;render();if(inputMode()==="type")focusAns()}
   else if(act==="giveup"){stopRec();setResult("ng");st.ph="revealed";render()}
@@ -1266,7 +1275,7 @@ function renderIntro(){
      viz:`<ul class="in-notes"><li><b>iPhoneはSafari、AndroidはChromeで開く</b><span>iPhoneのChromeや、LINE・Instagramの中で開くと、声の判定が使えません</span></li><li><b>マイクは「許可」を押す</b><span>最初に聞かれたら「許可」。間違えて断ったときは、ブラウザの設定で許可に戻せます</span></li><li><b>iPhoneは「音声入力」をオンに</b><span>設定 →「一般」→「キーボード」→「音声入力」がオフだと、声を聞き取れません</span></li><li><b>電波のよい場所で</b><span>声の聞き取りにはインターネットを使います</span></li></ul>`,
      b:`<p>うまく反応しないときは、タイピングで練習するか、「自分で判定」に切り替えても進められます。</p>`},
     {t:"おすすめの進め方",
-     viz:`<ol class="in-steps"><li><b>ステップ1から順番に</b><span>今いるステップに「いまここ」が付きます</span></li><li><b>ステップごとの確認テスト</b><span>ヒントなしで、一発で全文を言えるか確かめる</span></li><li><b>学習記録で復習</b><span>止まったところから、もう一度練習できます</span></li></ol>`,
+     viz:`<ol class="in-steps"><li><b>ステップ1から順番に</b><span>今いるステップに「続きから」が付きます</span></li><li><b>ステップごとの確認テスト</b><span>ヒントなしで、一発で全文を言えるか確かめる</span></li><li><b>学習記録で復習</b><span>止まったところから、もう一度練習できます</span></li></ol>`,
      b:`<p>1日数問でも大丈夫です。続けるうちに、短く言って後ろに足す感覚が身についていきます。</p>`}];
   const p=pages[introStep],last=introStep===pages.length-1;
   app.innerHTML=`<header class="top"><div class="brand"><span class="logo"><i></i><i></i><i></i></span><b>つぎ足し英作文</b></div><button class="ghost" data-act="intro-done">スキップ</button></header>
