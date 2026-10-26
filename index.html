@@ -991,11 +991,11 @@ function nextIndex(ids){let i=ids.findIndex(id=>!store.sets[id]);if(i<0)i=ids.fi
 function renderLevel(){
   const l=LEVELS[lvView-1];const ids=l.ids;const nx=nextIndex(ids);
   let inner="";
-  if(l.n===1){inner=`<section class="glass panel"><h2>ステップ1　まず結論を言う</h2><p class="small">日本語から「結論」を選びます。いつ・どこで・どんな、は後回し。</p>${marks(ids)}</section>`}
+  if(l.n===1){inner=`<section class="glass panel"><h2>ステップ1　まず結論を言う</h2><p class="small">日本語から「結論」を選びます。いつ・どこで・どんな、は後回し。</p></section>`}
   else{const desc={2:"結論の文を言ってから、情報を1つずつ後ろに足します。",3:"短い文を言ってから、and・but・soなどで次の話をつなぎます。",4:"人や物を言ってから、that・whoで説明を足します。",5:"ここまでの足し方を全部組み合わせて、長い文を組み立てます。"}[l.n];
     inner=`<section class="glass panel"><h2>ステップ${l.n}　${l.name}</h2><p class="small">${desc}</p>
     <div class="cats">${CATS[l.n].map(c=>{const cids=SETS.filter(s=>s.lv===l.n&&s.cat===c.k).map(s=>s.id);
-      return`<button class="cat" style="--c:var(${TY(c.k).c})" data-act="start" data-ids="${cids.join(",")}"><span class="nm"><i></i>${c.name}</span><span class="en">${c.en}</span>${marks(cids)}</button>`}).join("")}</div></section>`}
+      return`<div class="cat" style="--c:var(${TY(c.k).c})"><span class="nm"><i></i>${c.name}</span><span class="en">${c.en}</span></div>`}).join("")}</div></section>`}
   /* 問題一覧：これまでの記録と「ここから始める」 */
   inner+=`<section class="glass panel"><h2>問題一覧</h2><p class="small">タップすると、その問題から始められます</p><div class="hist">${ids.map((id,i)=>{const r=lastRes(id);
     return`<button class="hrow ${i===nx?"next":""}" data-act="from" data-lv="${l.n}" data-i="${i}"><span class="hn">${i+1}</span><span class="q">${esc(BYID[id].jp)}</span>${i===nx?'<span class="pill">次はここから</span>':`<span class="chip ${r||"none"}">${r?RES_LABEL[r]:"未挑戦"}</span>`}</button>`}).join("")}</div></section>`;
@@ -1110,10 +1110,10 @@ function renderPractice(){
   let h2="",sub="",stage="",under="",dock="";
   if(s.k==="pick"){
     const solved=st.picked.some(o=>o.ok),last=st.picked[st.picked.length-1];
-    h2="結論を言ってみよう！";sub="詳しい説明は後回し。短い文を選ぼう";
+    h2="結論を言ってみよう！";sub="まずは英文ではなく日本語からやってみよう";
     stage=`<div class="opts">${st.opts.map((o,i)=>{const p=st.picked.includes(o);return`<button class="opt ${p?(o.ok?"right":"wrong"):""}" data-act="pick" data-i="${i}" ${solved?"disabled":""}>${esc(o.t)}</button>`}).join("")}</div>`;
-    if(last&&!last.ok)stage+=`<div class="note ng">${last.why==="full"?"それは全部です。いきなり全部を英語にせず、まずは短い結論だけ。":"「"+esc(last.t)+"」は、あとで後ろに足す情報です。"}</div>`;
-    if(solved)stage+=`<div class="note ok">まずは「${esc(set.coreJp)}」から。${set.adds.map(a=>"「"+esc(a.jp)+"」").join("")}は、あとで足します。</div>`;
+    if(last&&!last.ok)stage+=`<div class="note ng">ナイスチャレンジ！でも、${last.why==="full"?"それは全部です。いきなり全部を英語にせず、まずは短い結論だけ。":"「"+esc(last.t)+"」は、あとで後ろに足す情報です。"}<br>もう一度選んでみよう！！</div>`;
+    if(solved)stage+=`<div class="note ok">まずは「${esc(set.coreJp)}」から。${set.adds.map(a=>"「"+esc(a.jp)+"」").join("")}は、あとで足します。<br>実際に英文を作るのはステップ2からやっていきます！</div>`;
     dock=`<button class="big" data-act="next" ${solved?"":"disabled"}>${solved?(sess.i+1<sess.ids.length?"次の問題へ":"結果を見る"):"結論を選んでください"}</button>`;
   }else if(s.k==="preview"){
     h2="結論の文が言えました";sub="残りは、後ろに足していく情報です";
@@ -1136,7 +1136,7 @@ function renderPractice(){
       dock="";under="";
     }else if(DONE.includes(st.ph)){
       const r=st.res[st.si];
-      stage+=`<div class="answer"><div class="note ${r==="ng"?"ng":"ok"}">${r==="ok"?"言えました！":r==="hint"?"ヒントを使って言えました。":"お手本を聞いて、まねして言ってから次へ。"}</div>
+      stage+=`<div class="answer"><div class="note ${r==="ng"?"ng":"ok"}">${r==="ok"?"言えました！":r==="hint"?"ヒントを使って言えました。":"ナイスチャレンジ！お手本を聞いて、まねして言ってから次へ進もう！"}</div>
         <span class="en">${esc(stepAnswer())}</span><button class="play" data-act="play" data-t="${esc(stepAnswer())}">${IC.spk}お手本</button>
         ${st.heard?`<span class="heard">${st.via==="type"?"入力":"聞き取り"}：${esc(st.heard)}</span>`:""}</div>`;
       dock=`<button class="big" data-act="next">${st.si===st.steps.length-1?(sess.i+1<sess.ids.length?"次の問題へ":"結果を見る"):"次へ"}</button>`;
@@ -1146,13 +1146,13 @@ function renderPractice(){
     }else if(inputMode()==="type"){
       stage+=`<div class="typewrap"><label class="small" for="ans">英語で入力してください</label>
         <input id="ans" class="en" type="text" value="${esc(st.typed||"")}" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" lang="en" enterkeyhint="done" placeholder="${s.k==="add"?"続きだけでも、最初からでもOK":""}"></div>`;
-      if(st.ph==="retry")stage+=`<div class="note hi">惜しいです！単語が足りないか、違う単語があります。<br>分からない場合は「答えを見る」に進みましょう👍️✨️<br>正解するより、まずはどんどん進めることがオススメです。</div>`;
+      if(st.ph==="retry")stage+=`<div class="note hi">ナイスチャレンジ！でも、単語が足りないか、違う単語があります。<br>もう一度入力してみよう！！<br>分からない場合は「答えを見る」に進みましょう👍️✨️<br>正解するより、まずはどんどん進めることがオススメです。</div>`;
       dock=`<button class="big lite" data-act="giveup">答えを見る</button><button class="big" data-act="typecheck">答え合わせ</button>`;
     }else if(mode==="mic"){
       const lis=st.ph==="listening";
       stage+=`<div class="micwrap"><button class="micbtn ${lis?"listening":""}" data-act="mic" aria-label="${lis?"止める":"話す"}"><span>${IC.mic}<small>${lis?"止めて判定":"話す"}</small></span></button>
         <div class="heard" id="heard">${lis?"聞いています。話し終わったら少し待つか、ボタンを押してください":st.ph==="retry"?"聞き取り：「"+esc(st.heard||"聞き取れませんでした")+"」":"押してから英語で話してください"}</div></div>`;
-      if(st.ph==="retry")stage+=`<div class="note hi">惜しい！もう一度、またはヒントを見てから挑戦してみよう。</div>`;
+      if(st.ph==="retry")stage+=`<div class="note hi">ナイスチャレンジ！でも、聞き取った英語が答えと少し違います。<br>もう一度、またはヒントを見てから言ってみよう！！</div>`;
       dock=`<button class="big lite" data-act="giveup">答えを見る</button>`;
     }else{
       stage+=`<div class="micwrap"><p class="small" style="text-align:center">まず声に出して言ってから、<br>下のボタンで答えを確認します。</p></div>`;
