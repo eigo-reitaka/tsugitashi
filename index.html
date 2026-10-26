@@ -1103,7 +1103,7 @@ function renderPractice(){
   let h2="",sub="",stage="",under="",dock="";
   if(s.k==="pick"){
     const solved=st.picked.some(o=>o.ok),last=st.picked[st.picked.length-1];
-    h2="まず、結論は？";sub="詳しい説明は後回し。短い文を選ぼう";
+    h2="結論を言ってみよう！";sub="詳しい説明は後回し。短い文を選ぼう";
     stage=`<div class="opts">${st.opts.map((o,i)=>{const p=st.picked.includes(o);return`<button class="opt ${p?(o.ok?"right":"wrong"):""}" data-act="pick" data-i="${i}" ${solved?"disabled":""}>${esc(o.t)}</button>`}).join("")}</div>`;
     if(last&&!last.ok)stage+=`<div class="note ng">${last.why==="full"?"それは全部です。いきなり全部を英語にせず、まずは短い結論だけ。":"「"+esc(last.t)+"」は、あとで後ろに足す情報です。"}</div>`;
     if(solved)stage+=`<div class="note ok">まずは「${esc(set.coreJp)}」から。${set.adds.map(a=>"「"+esc(a.jp)+"」").join("")}は、あとで足します。</div>`;
