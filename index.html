@@ -572,7 +572,14 @@ const SE_TRIAL=5;
 const SE={};["correct","wrong","complete"].forEach(k=>{try{const a=new Audio("se/"+k+".mp3");a.preload="auto";SE[k]=a}catch(e){}});
 function seOn(set){if(store.settings.se===false||!set||!sess||sess.mode!=="practice")return false;
   const l=LEVELS[set.lv-1];return !!l&&l.ids.slice(0,SE_TRIAL).includes(set.id)}
-function playSE(k){const a=SE[k];if(!a)return;try{const c=a.cloneNode();c.play().catch(()=>{})}catch(e){}}
+const sePlaying=new Set();
+function playSE(k){const a=SE[k];if(!a)return;try{const c=a.cloneNode();sePlaying.add(c);c.onended=()=>sePlaying.delete(c);c.play().catch(()=>sePlaying.delete(c))}catch(e){}}
+/* マイクを使う前に、鳴っている音（お手本・効果音・読み上げ）を全部止める。iPhoneでは音が鳴っているとマイクが動かないことがある */
+function stopAllSound(){let was=false;
+  if(curAudio){was=!curAudio.paused;curAudio.pause();curAudio=null}
+  sePlaying.forEach(c=>{if(!c.paused)was=true;try{c.pause()}catch(e){}});sePlaying.clear();
+  try{if(window.speechSynthesis&&(speechSynthesis.speaking||speechSynthesis.pending)){was=true;speechSynthesis.cancel()}}catch(e){}
+  return was}
 function tts(text){
   if(!("speechSynthesis" in window))return;
   speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=store.settings.rate;if(voice)u.voice=voice;speechSynthesis.speak(u);
@@ -590,23 +597,28 @@ let rec=null;
    話し終わってから約2秒黙るか、ボタンをもう一度押したら判定する。
    何も話さないまま止まった場合は、最大10秒まで自動で聞き直す。最長20秒。 */
 let recCtl=null;
-function listen(onInterim){
+let lastMicErr="";
+async function listen(onInterim){
+  if(stopAllSound())await new Promise(r=>setTimeout(r,250));
   return new Promise(resolve=>{
     const t0=Date.now();let parts=[],alts=[],interim="",err=null,done=false,silence=null,userStop=false;
     const said=()=>{const main=(parts.join(" ")+" "+interim).trim();const out=main?[main]:[];
       if(alts.length&&parts.length<=1)alts.forEach(a=>{const x=(a+" "+interim).trim();if(x&&!out.includes(x))out.push(x)});return out};
     const finish=()=>{if(done)return;done=true;clearTimeout(silence);clearTimeout(cap);recCtl=null;rec=null;
-      if(err&&["not-allowed","service-not-allowed","audio-capture"].includes(err))micBlocked=true;resolve({said:said(),err})};
+      lastMicErr=err||"";
+      /* 許可されていない場合だけ「自分で判定」に切り替える。それ以外（一時的な失敗）は、もう一度押せば使える */
+      if(err&&["not-allowed","service-not-allowed"].includes(err))micBlocked=true;resolve({said:said(),err})};
     const stopNow=()=>{userStop=true;try{rec&&rec.stop()}catch(e){finish()}};
     const cap=setTimeout(stopNow,20000);
     recCtl={stop:stopNow};
     const start=()=>{
       try{rec=new SR();rec.lang="en-US";rec.interimResults=true;rec.maxAlternatives=3;rec.continuous=true}catch(e){micBlocked=true;err="unsupported";finish();return}
-      rec.onresult=ev=>{interim="";for(let i=ev.resultIndex;i<ev.results.length;i++){const r=ev.results[i];
+      rec.onresult=ev=>{started=true;interim="";for(let i=ev.resultIndex;i<ev.results.length;i++){const r=ev.results[i];
           if(r.isFinal){parts.push(r[0].transcript.trim());alts=[...r].map(x=>x.transcript.trim())}else interim+=r[0].transcript}
         onInterim&&onInterim((parts.join(" ")+" "+interim).trim());
         clearTimeout(silence);silence=setTimeout(stopNow,2000)};
       rec.onerror=ev=>{if(ev.error!=="no-speech"&&ev.error!=="aborted")err=ev.error};
+      rec.onaudiostart=()=>{started=true};rec.onstart=()=>{started=true};
       rec.onend=()=>{
         if(interim){parts.push(interim.trim());interim=""}
         if(!userStop&&!err){
@@ -614,9 +626,12 @@ function listen(onInterim){
           if(parts.length||Date.now()-t0<10000){start();return}
         }
         finish()};
-      try{rec.start()}catch(e){if(!parts.length){micBlocked=true;err="start"}finish()}
+      try{rec.start()}catch(e){if(!parts.length)err="start";finish()}
     };
+    let started=false;
     start();
+    /* 押してから3秒たってもマイクが動き出さないときは、止めて理由を伝える */
+    setTimeout(()=>{if(!started&&!done){err=err||"no-start";stopNow();setTimeout(finish,600)}},3000);
   });
 }
 
@@ -1261,9 +1276,10 @@ app.addEventListener("click",async e=>{
     try{navigator.clipboard.writeText(url).then(done,()=>prompt("このURLをコピーして、Safariに貼り付けてください",url))}catch(e){prompt("このURLをコピーして、Safariに貼り付けてください",url)}}
   else if(act==="mic"){
     if(st.ph==="listening"){stopRec();return}
-    st.ph="listening";render();
+    st.ph="listening";banner="";render();
     const r=await listen(t=>{const h=document.getElementById("heard");if(h)h.textContent=t});
-    if(r.err&&micBlocked){banner="この画面ではマイクが使えなかったので、「自分で判定」に切り替えました。";st.ph="ready";render();return}
+    if(r.err&&micBlocked){banner=r.err==="not-allowed"?"マイクが許可されていないため、「自分で判定」に切り替えました。ブラウザの設定でマイクを許可すると、声で判定できます。":IOS?"声の聞き取りが使えないため、「自分で判定」に切り替えました。iPhoneの設定 →「一般」→「キーボード」→「音声入力」がオンか確認してください。":"この画面ではマイクが使えなかったので、「自分で判定」に切り替えました。";st.ph="ready";render();return}
+    if(r.err&&!(r.said||[]).length){banner=r.err==="network"?"通信が不安定で聞き取れませんでした。電波のよい場所で、もう一度マイクを押してください。":r.err==="no-start"||r.err==="audio-capture"||r.err==="start"?"マイクがうまく起動しませんでした。もう一度マイクを押してください。":"うまく聞き取れませんでした。もう一度マイクを押してください。";st.ph="ready";render();return}
     const said=r.said||[];st.heard=said[0]||"";
     st.via="voice";
     if(passes(said,stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";if(seOn(st.set))playSE("correct");render()}
