@@ -503,7 +503,14 @@ const AUDIO=new Proxy({},{get:(o,t)=>AUDIO_ID[t]?"audio/"+AUDIO_ID[t]+".mp3":und
 /* ============ 保存（この端末のブラウザ内） ============ */
 const KEY="tsugitashi_v1";
 let store=load();
-function load(){try{const v=JSON.parse(localStorage.getItem(KEY)||"null");if(v&&v.v===1)return v}catch(e){}return{v:1,sets:{},days:{},settings:{judge:"mic",rate:0.9,input:"voice"}}}
+/* 保存データが古い・一部欠けている場合も、足りない項目を補って起動できるようにする */
+function load(){const def={v:1,sets:{},days:{},tests:{},settings:{judge:"mic",rate:0.9,input:"voice"}};
+  try{const v=JSON.parse(localStorage.getItem(KEY)||"null");if(v&&v.v===1&&typeof v==="object"){
+    const o={...def,...v};["sets","days","tests"].forEach(k=>{if(!o[k]||typeof o[k]!=="object")o[k]={}});
+    o.settings={...def.settings,...(v.settings&&typeof v.settings==="object"?v.settings:{})};
+    for(const id in o.sets){const r=o.sets[id];if(!r||typeof r!=="object"){delete o.sets[id];continue}
+      r.n=r.n||0;r.okN=r.okN||0;if(!Array.isArray(r.hist))r.hist=[]}
+    return o}}catch(e){}return def}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}}
 const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
 
