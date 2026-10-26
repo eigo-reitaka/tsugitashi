@@ -1066,7 +1066,7 @@ function renderLevel(){
   else{const desc={2:"結論の文を言ってから、情報を1つずつ後ろに足します。",3:"短い文を言ってから、and・but・soなどで次の話をつなぎます。",4:"人や物を言ってから、that・whoで説明を足します。",5:"ここまでの足し方を全部組み合わせて、長い文を組み立てます。"}[l.n];
     inner=`<section class="glass panel"><h2>ステップ${l.n}　${l.name}</h2><p class="small">${desc}</p>
     <div class="cats">${CATS[l.n].map(c=>{const cids=SETS.filter(s=>s.lv===l.n&&s.cat===c.k).map(s=>s.id);
-      return`<button class="cat" style="--c:var(${TY(c.k).c})" data-act="start" data-ids="${cids.join(",")}"><span class="nm"><i></i>${c.name}</span><span class="en">${c.en}</span>${marks(cids)}</button>`}).join("")}</div></section>`}
+      return`<div class="cat" style="--c:var(${TY(c.k).c})"><span class="nm"><i></i>${c.name}</span><span class="en">${c.en}</span>${marks(cids)}</div>`}).join("")}</div></section>`}
   /* 問題一覧：これまでの記録と「ここから始める」 */
   inner+=`<section class="glass panel"><h2>問題一覧</h2><p class="small">タップすると、その問題から始められます</p><div class="hist">${ids.map((id,i)=>{const r=lastRes(id);
     return`<button class="hrow ${i===nx?"next":""}" data-act="from" data-lv="${l.n}" data-i="${i}"><span class="hn">${i+1}</span><span class="q">${esc(BYID[id].jp)}</span>${i===nx?'<span class="pill">次はここから</span>':`<span class="chip ${r||"none"}">${r?RES_LABEL[r]:"未挑戦"}</span>`}</button>`}).join("")}</div></section>`;
