@@ -257,6 +257,19 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .jpq b{font-size:21px;font-weight:700;line-height:1.5;text-wrap:balance}
 .jpq .jl{font-size:12px;font-weight:700;color:var(--muted)}
 .jsrc{margin:-10px 2px 0}
+.srcq{display:flex;flex-direction:column;gap:3px;padding:12px 16px;border:1px solid var(--line);border-radius:12px}
+.srcq .jl{font-size:12px;font-weight:700;color:var(--muted)}
+.srcq .st{font-size:16.5px;line-height:1.6;color:var(--ink)}
+.srcarrow{display:flex;justify-content:center;margin:-10px 0;color:var(--faint)}.srcarrow svg{transform:rotate(90deg);width:18px;height:18px}
+/* 正解の演出 */
+.fx{position:fixed;inset:0;pointer-events:none;z-index:50;display:grid;place-items:center}
+.fx .maru{width:150px;height:150px;fill:none;stroke:#E0473B;stroke-width:12;stroke-linecap:round;stroke-dasharray:300;stroke-dashoffset:300;transform:rotate(-90deg);animation:maru .45s ease-out forwards,fxout .35s ease-in 1.1s forwards;filter:drop-shadow(0 4px 10px rgba(224,71,59,.25))}
+@keyframes maru{to{stroke-dashoffset:0}}
+@keyframes fxout{to{opacity:0;transform:rotate(-90deg) scale(1.08)}}
+.fx .conf{position:absolute;left:50%;top:46%;width:0;height:0}
+.fx .conf i{position:absolute;width:9px;height:14px;border-radius:2px;opacity:0;animation:conf var(--d) ease-out .12s forwards}
+@keyframes conf{0%{opacity:1;transform:translate(0,0) rotate(0)}40%{opacity:1;transform:translate(var(--x),var(--y)) rotate(calc(var(--r) / 2))}100%{opacity:0;transform:translate(calc(var(--x) * 1.15),calc(var(--y) + 240px)) rotate(var(--r))}}
+@media (prefers-reduced-motion: reduce){.fx .maru{animation:none;stroke-dashoffset:0;opacity:.9}}
 .opts{display:flex;flex-direction:column;gap:10px}
 .opt{text-align:left;border:1px solid var(--line);border-radius:12px;padding:15px 16px;font-size:15.5px}
 .opt:hover{border-color:var(--ink)}
@@ -585,12 +598,14 @@ function pickVoice(){if(!("speechSynthesis" in window))return;const vs=speechSyn
   const pref=["Samantha","Google US English","Microsoft Aria","Microsoft Jenny","Alex"];
   voice=vs.find(v=>pref.some(p=>v.name.includes(p)))||vs[0]||null}
 if("speechSynthesis" in window){pickVoice();speechSynthesis.onvoiceschanged=pickVoice}
-let curAudio=null;
+let curAudio=null,voiceEl=null;
 function speak(text){
   if(curAudio){curAudio.pause();curAudio=null}
-  if(AUDIO[text]&&!audioBroken){const a=new Audio(AUDIO[text]);curAudio=a;a.preservesPitch=true;a.playbackRate=store.settings.rate<0.85?0.8:store.settings.rate>1?1.15:1;
-    /* 音声ファイルが読めない場所（プレビューなど）では、端末の読み上げに切り替える */
+  if(AUDIO[text]&&!audioBroken){
+    /* 再生のたびに新しい音声プレーヤーを作ると、何十回も使ううちに端末の上限に達して音やマイクが動かなくなるため、1つを使い回す */
+    const a=voiceEl||(voiceEl=new Audio());curAudio=a;a.preservesPitch=true;
     a.onerror=()=>{audioBroken=true;if(curAudio===a){curAudio=null;tts(text)}};
+    a.src=AUDIO[text];a.playbackRate=store.settings.rate<0.85?0.8:store.settings.rate>1?1.15:1;
     a.play().catch(e=>{if(e&&e.name==="NotSupportedError")a.onerror()});return}
   tts(text);
 }
@@ -620,13 +635,17 @@ let rec=null;
    何も話さないまま止まった場合は、最大10秒まで自動で聞き直す。最長20秒。 */
 let recCtl=null;
 let lastMicErr="";
+/* 音声認識は1つを使い回す（毎回作ると、端末によっては何十回目かで動かなくなる） */
+let SRI=null;
+function getSR(){if(!SRI){SRI=new SR();SRI.lang="en-US";SRI.interimResults=true;SRI.maxAlternatives=3;SRI.continuous=true}return SRI}
 async function listen(onInterim){
   if(stopAllSound())await new Promise(r=>setTimeout(r,250));
   return new Promise(resolve=>{
     const t0=Date.now();let parts=[],alts=[],interim="",err=null,done=false,silence=null,userStop=false;
     const said=()=>{const main=(parts.join(" ")+" "+interim).trim();const out=main?[main]:[];
       if(alts.length&&parts.length<=1)alts.forEach(a=>{const x=(a+" "+interim).trim();if(x&&!out.includes(x))out.push(x)});return out};
-    const finish=()=>{if(done)return;done=true;clearTimeout(silence);clearTimeout(cap);recCtl=null;rec=null;
+    const finish=()=>{if(done)return;done=true;clearTimeout(silence);clearTimeout(cap);recCtl=null;
+      if(rec){rec.onresult=rec.onerror=rec.onend=rec.onstart=rec.onaudiostart=null}rec=null;
       lastMicErr=err||"";
       /* 許可されていない場合だけ「自分で判定」に切り替える。それ以外（一時的な失敗）は、もう一度押せば使える */
       if(err&&["not-allowed","service-not-allowed"].includes(err))micBlocked=true;resolve({said:said(),err})};
@@ -634,7 +653,14 @@ async function listen(onInterim){
     const cap=setTimeout(stopNow,20000);
     recCtl={stop:stopNow};
     const start=()=>{
-      try{rec=new SR();rec.lang="en-US";rec.interimResults=true;rec.maxAlternatives=3;rec.continuous=true}catch(e){micBlocked=true;err="unsupported";finish();return}
+      try{rec=getSR()}catch(e){micBlocked=true;err="unsupported";finish();return}
+      bind();
+      try{rec.start()}catch(e){
+        /* 前回の聞き取りが残っていて始められないときは、作り直してもう一度だけ試す */
+        try{rec.abort()}catch(_){}SRI=null;
+        try{rec=getSR();bind();rec.start()}catch(e2){if(!parts.length)err="start";finish()}}
+    };
+    const bind=()=>{
       rec.onresult=ev=>{started=true;interim="";for(let i=ev.resultIndex;i<ev.results.length;i++){const r=ev.results[i];
           if(r.isFinal){parts.push(r[0].transcript.trim());alts=[...r].map(x=>x.transcript.trim())}else interim+=r[0].transcript}
         onInterim&&onInterim((parts.join(" ")+" "+interim).trim());
@@ -648,12 +674,11 @@ async function listen(onInterim){
           if(parts.length||Date.now()-t0<10000){start();return}
         }
         finish()};
-      try{rec.start()}catch(e){if(!parts.length)err="start";finish()}
     };
     let started=false;
     start();
     /* 押してから3秒たってもマイクが動き出さないときは、止めて理由を伝える */
-    setTimeout(()=>{if(!started&&!done){err=err||"no-start";stopNow();setTimeout(finish,600)}},3000);
+    setTimeout(()=>{if(!started&&!done){err=err||"no-start";try{rec&&rec.abort()}catch(e){}SRI=null;stopNow();setTimeout(finish,600)}},3000);
   });
 }
 
@@ -1222,11 +1247,24 @@ function renderPractice(){
 
 /* いま英語にする日本語を大きく、元の文は小さく添える */
 function promptHTML(set,s){
-  if(s.k==="core")return`<div class="jpq"><span class="jl">英語にする文</span><b>${esc(set.coreJp)}</b></div><p class="small jsrc">元の文：${esc(set.jp)}</p>`;
-  if(s.k==="add"){const a=set.adds[s.i];return`<div class="jpq"><span class="jl" style="color:var(${TY(a.t).c})">後ろに足す（${esc(TY(a.t).l)}）</span><b>${esc(a.jp)}</b></div><p class="small jsrc">元の文：${esc(set.jp)}</p>`}
+  /* 元の文を先に見せて、その中の「今、英語にする部分」を大きく出す */
+  const src=`<div class="srcq"><span class="jl">元の文</span><span class="st">${esc(set.jp)}</span></div><div class="srcarrow">${IC.chev}</div>`;
+  if(s.k==="core")return src+`<div class="jpq"><span class="jl">まずは結論だけを英語に</span><b>${esc(set.coreJp)}</b></div>`;
+  if(s.k==="add"){const a=set.adds[s.i];return src+`<div class="jpq"><span class="jl" style="color:var(${TY(a.t).c})">後ろに足す（${esc(TY(a.t).l)}）</span><b>${esc(a.jp)}</b></div>`}
   return`<div class="jpq">${s.k==="full"&&!isTest()?'<span class="jl">英語にする文（全部）</span>':""}<b>${esc(set.jp)}</b></div>`;
 }
 function setResult(r){st.res[st.si]=r}
+/* 正解の演出：毎回は大きな◯、その問題をやり切ったとき（最後の段階）は紙吹雪も */
+function celebrate(){const last=st&&st.si===st.steps.length-1;
+  const reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fx=document.createElement("div");fx.className="fx";fx.setAttribute("aria-hidden","true");
+  fx.innerHTML=`<svg class="maru" viewBox="0 0 120 120"><circle cx="60" cy="60" r="46"/></svg>`;
+  if(last&&!reduce){const C=["#D9603B","#F2B33D","#2E9E6B","#3B7DD8","#C2478A","#7A5AE0"];let h="";
+    for(let i=0;i<34;i++){const a=(Math.random()*120+30)*Math.PI/180,d=140+Math.random()*180;
+      const x=Math.cos(a)*d*(Math.random()<.5?-1:1),y=-Math.sin(a)*d*0.9;
+      h+=`<i style="--x:${x.toFixed(0)}px;--y:${y.toFixed(0)}px;--r:${(Math.random()*720-360).toFixed(0)}deg;--d:${(0.9+Math.random()*0.6).toFixed(2)}s;background:${C[i%C.length]};${i%3?"":"border-radius:50%;"}"></i>`}
+    fx.insertAdjacentHTML("beforeend",`<div class="conf">${h}</div>`)}
+  document.body.appendChild(fx);setTimeout(()=>fx.remove(),1700)}
 function finishSet(){
   const set=st.set;const order={ok:0,hint:1,ng:2};let worst="ok",stuck=null;
   st.steps.forEach((x,i)=>{const r=st.res[i];if(!r)return;if(order[r]>order[worst])worst=r;if(r!=="ok"&&!stuck)stuck=stepLabel(set,x.k,x.i)});
@@ -1277,7 +1315,7 @@ app.addEventListener("click",async e=>{
   else if(act==="judge"){store.settings.judge=b.dataset.v;save();render()}
   else if(act==="rate"){store.settings.rate=+b.dataset.v;save();render();if(view!=="practice")speak("I had breakfast at the hotel this morning.")}
   else if(act==="quit"){stopRec();view=backTo||"home";render()}
-  else if(act==="pick"){const o=st.opts[+b.dataset.i];if(st.picked.includes(o))return;st.picked.push(o);if(o.ok)setResult(st.picked.length===1?"ok":"hint");render()}
+  else if(act==="pick"){const o=st.opts[+b.dataset.i];if(st.picked.includes(o))return;st.picked.push(o);if(o.ok)setResult(st.picked.length===1?"ok":"hint");render();if(o.ok)celebrate()}
   else if(act==="next"){snap();st.si++;st.ph="ready";st.hint=0;st.heard="";st.typed="";st.via="";banner="";if(st.si>=st.steps.length)return finishSet();
     if(["core","full"].includes(curStep().k)&&!sess.chosen)st.ph="choose";render();if(st.ph==="ready"&&inputMode()==="type")focusAns()}
   else if(act==="choose"){snap();store.settings.input=b.dataset.v;save();sess.chosen=true;st.ph="ready";render();if(inputMode()==="type")focusAns()}
@@ -1286,8 +1324,8 @@ app.addEventListener("click",async e=>{
   else if(act==="hint"){st.hint++;render();if(inputMode()==="type")focusAns()}
   else if(act==="giveup"){stopRec();setResult("ng");st.ph="revealed";render()}
   else if(act==="reveal-self"){st.ph="selfcheck";render()}
-  else if(act==="self"){setResult(b.dataset.v==="ok"?(st.hint?"hint":"ok"):"ng");st.ph="checked";render()}
-  else if(act==="override"){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
+  else if(act==="self"){setResult(b.dataset.v==="ok"?(st.hint?"hint":"ok"):"ng");st.ph="checked";render();if(b.dataset.v==="ok")celebrate()}
+  else if(act==="override"){setResult(st.hint?"hint":"ok");st.ph="passed";render();celebrate()}
   else if(act==="copyurl"){const url=location.href.split("#")[0];
     const done=()=>{b.textContent="コピーしました"};
     try{navigator.clipboard.writeText(url).then(done,()=>prompt("このURLをコピーして、Safariに貼り付けてください",url))}catch(e){prompt("このURLをコピーして、Safariに貼り付けてください",url)}}
@@ -1299,14 +1337,14 @@ app.addEventListener("click",async e=>{
     if(r.err&&!(r.said||[]).length){banner=r.err==="network"?"通信が不安定で聞き取れませんでした。電波のよい場所で、もう一度マイクを押してください。":r.err==="no-start"||r.err==="audio-capture"||r.err==="start"?"マイクがうまく起動しませんでした。もう一度マイクを押してください。":"うまく聞き取れませんでした。もう一度マイクを押してください。";st.ph="ready";render();return}
     const said=r.said||[];st.heard=said[0]||"";
     st.via="voice";
-    if(passes(said,stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
+    if(passes(said,stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render();celebrate()}
     else{st.ph="retry";render()}
   }
 });
 function focusAns(){const el=document.getElementById("ans");if(el){el.focus();const n=el.value.length;try{el.setSelectionRange(n,n)}catch(e){}}}
 function typeCheck(){const v=(document.getElementById("ans")?.value||"").trim();if(!v){focusAns();return}
   st.typed=v;st.heard=v;st.via="type";
-  if(passes([v],stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
+  if(passes([v],stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render();celebrate()}
   else if(st.ph==="retry"){setResult("ng");st.ph="revealed";render()}
   else{st.ph="retry";render();focusAns()}}
 app.addEventListener("input",e=>{if(e.target.id==="ans"&&st)st.typed=e.target.value});
