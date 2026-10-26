@@ -50,7 +50,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .en{font-family:var(--f-en)}
 .glass{background:var(--bg);border:1px solid var(--line);border-radius:var(--r)}
 /* 改行位置調整用のかたまり：見た目は親の文字の設定をそのまま受け継ぐ（ほかの「span」向けの指定の影響を受けない） */
-.jt,.cl{font-size:inherit!important;color:inherit!important;font-weight:inherit!important;line-height:inherit!important;font-family:inherit!important;margin:0!important}
+.jt,.cl{border:0!important;padding:0!important;background:none!important;font-size:inherit!important;color:inherit!important;font-weight:inherit!important;line-height:inherit!important;font-family:inherit!important;margin:0!important}
 .jt{display:inline!important}.cl{display:inline-block!important;max-width:100%}.cl.flow{display:inline!important}
 .small{font-size:12.5px;color:var(--muted);margin:0}
 .foot{color:var(--muted);font-size:12px;text-align:center;padding-bottom:28px;margin:0}
@@ -259,6 +259,13 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .jpq b{font-size:21px;font-weight:700;line-height:1.5;text-wrap:balance}
 .jpq .jl{font-size:12px;font-weight:700;color:var(--muted)}
 .jsrc{margin:-10px 2px 0}
+.sgbox{display:flex;flex-direction:column;gap:8px;padding:16px 18px;border-radius:12px;background:var(--soft)}
+.sgline{margin:0;font-size:20px;line-height:1.85;font-weight:500}
+.sg.later{color:var(--faint);font-weight:400}
+.sg.done{color:var(--ink);font-weight:400}
+.sg.now{color:#712B13;background:#FBE3D8;border-bottom:3px solid var(--accent);padding:1px 3px;border-radius:4px 4px 0 0;font-weight:700}
+.sgnote{margin:0;font-size:14px;color:var(--ink);display:flex;gap:8px;align-items:baseline}.sgnote b{font-size:11.5px;color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:0 6px;flex-shrink:0}
+.sgsub{margin:0;font-size:12.5px;color:var(--muted)}
 .srcq{display:flex;flex-direction:column;gap:3px;padding:12px 16px;border:1px solid var(--line);border-radius:12px}
 .srcq .jl{font-size:12px;font-weight:700;color:var(--muted)}
 .srcq .st{font-size:16.5px;line-height:1.6;color:var(--ink)}
@@ -1193,8 +1200,8 @@ function renderPractice(){
       <div class="answer"><button class="play" data-act="play" data-t="${esc(set.core)}">${IC.spk}お手本</button></div>`;
     dock=`<button class="big" data-act="finishSet">${sess.i+1<sess.ids.length?"次の問題へ":"結果を見る"}</button>`;
   }else{
-    if(s.k==="core"){h2="結論の文を英語で";sub=""}
-    if(s.k==="add"){const a=set.adds[s.i];h2="後ろに「"+a.jp+"」を足そう";sub=TY(a.t).l+"を足す　"+(s.i+1)+" / "+set.adds.length}
+    if(s.k==="core"){h2="色のついた部分を英語で";sub="まずは結論だけ"}
+    if(s.k==="add"){const a=set.adds[s.i];h2="色のついた部分を英語で";sub="「"+TY(a.t).l+"」を後ろに足す　"+(s.i+1)+" / "+set.adds.length}
     if(s.k==="full"){h2=isTest()||sess.direct?"英語で言ってみよう":"最初から通して言おう";sub=isTest()?"日本語を見て、一発で全文を言おう":sess.direct?"日本語を見て、全文を英語で言おう":"ヒントなしで挑戦"}
     if(st.ph==="choose"){h2="どうやって練習する？";sub="このあとの問題も同じ方法で進みます。右上のボタンでいつでも切り替えられます"}
     const hl=hintList(),hs=hl.slice(0,st.hint).map(h=>`<div class="note hi">${h}</div>`).join("");
@@ -1250,12 +1257,34 @@ function renderPractice(){
 /* いま英語にする日本語を大きく、元の文は小さく添える */
 function promptHTML(set,s){
   /* 元の文を先に見せて、その中の「今、英語にする部分」を大きく出す */
-  const src=`<div class="srcq"><span class="jl">元の文</span><span class="st">${esc(set.jp)}</span></div><div class="srcarrow">${IC.chev}</div>`;
-  if(s.k==="core")return src+`<div class="jpq"><span class="jl">まずは結論だけを英語に</span><b>${esc(set.coreJp)}</b></div>`;
-  if(s.k==="add"){const a=set.adds[s.i];return src+`<div class="jpq"><span class="jl" style="color:var(${TY(a.t).c})">後ろに足す（${esc(TY(a.t).l)}）</span><b>${esc(a.jp)}</b></div>`}
+  /* 元の文の中で、今英語にする部分だけ色をつけ、あとで足す部分は薄くする */
+  if(s.k==="core"||s.k==="add"){const cur=s.k==="core"?-1:s.i,sg=segOf(set);
+    const cls=k=>k===cur?"now":(k<cur?"done":"later");
+    const html=sg.parts.map(p=>p.k===null?esc(p.t):`<span class="sg ${cls(p.k)}">${esc(p.t)}</span>`).join("");
+    let note="";
+    if(s.k==="core"){const later=set.adds.map(a=>"「"+a.jp+"」").join("");note=`<p class="sgnote"><b>結論</b>${esc(set.coreJp)}</p>${later?`<p class="sgsub">${esc(later)}は、あとで足します</p>`:""}`}
+    else{const a=set.adds[s.i];note=sg.found[s.i]?"":`<p class="sgnote"><b>${esc(TY(a.t).l)}</b>${esc(a.jp)}</p>`}
+    return`<div class="sgbox"><p class="sgline">${html}</p>${note}</div>`}
   return`<div class="jpq">${s.k==="full"&&!isTest()?'<span class="jl">英語にする文（全部）</span>':""}<b>${esc(set.jp)}</b></div>`;
 }
 function setResult(r){st.res[st.si]=r}
+/* 元の文を「結論」と「足す情報」に切り分ける（足す情報の日本語が元の文のどこにあるかを探す） */
+const CONJ=new Set(["and","but","so","because","when","if"]);
+function lcsStr(a,b){let best=[0,0,0];const d=Array(b.length+1).fill(0);for(let i=1;i<=a.length;i++){for(let j=b.length;j>=1;j--){d[j]=a[i-1]===b[j-1]?d[j-1]+1:0;if(d[j]>best[0])best=[d[j],i-d[j],j-d[j]]}}return best}
+function segOf(set){if(set._seg)return set._seg;const jp=set.jp,own=Array(jp.length).fill(null),found=[];
+  /* 先に短い情報（どこで・誰と・that など）を探し、そのあと接続詞の文を、残りの部分から広げて探す */
+  const order=set.adds.map((a,k)=>k).sort((x,y)=>(CONJ.has(set.adds[x].t)?1:0)-(CONJ.has(set.adds[y].t)?1:0));
+  order.forEach(k=>{const a=set.adds[k];let st0=-1,len=0;
+    const v=[a.jp,a.jp.replace(/^(私が|私は|私の)/,""),a.jp.replace(/^(私が|私は|私の)/,"").replace(/(で|に|と|から|ので|、)$/,""),a.jp.replace(/^(そして|でも|だから|なぜなら)、?/,"")];
+    for(const x of v){if(!x||(x.length<2&&x!==a.jp))continue;let p=jp.indexOf(x);while(p>=0&&own.slice(p,p+x.length).some(o=>o!==null))p=jp.indexOf(x,p+1);if(p>=0){st0=p;len=x.length;break}}
+    if(st0<0||own.slice(st0,st0+len).some(o=>o!==null)){st0=-1;const core=a.jp.replace(/^(私が|私は|私の|そして、?|でも、?|だから、?|なぜなら、?)/,"");const [L,,j]=lcsStr(core,jp);if(L>=3&&L>=core.length*0.45){st0=j;len=L}}
+    if(st0>=0&&CONJ.has(a.t)){/* 接続詞でつなぐ文は、元の文の「、」「。」で区切られたひとかたまり全体 */
+      let s1=st0,e1=st0+len;while(s1>0&&!/[、。]/.test(jp[s1-1])&&own[s1-1]===null)s1--;while(e1<jp.length&&!/[、。]/.test(jp[e1])&&own[e1]===null)e1++;st0=s1;len=e1-s1}
+    if(st0>=0&&!own.slice(st0,st0+len).some(o=>o!==null)){for(let i=st0;i<st0+len;i++)own[i]=k;found[k]=true}else found[k]=false});
+  const parts=[];for(let i=0;i<jp.length;i++){let k=own[i];if(k===null)k=/[、。！？]/.test(jp[i])?null:-1;
+    const last=parts[parts.length-1];if(last&&last.k===k)last.t+=jp[i];else parts.push({k,t:jp[i]})}
+  /* 区切りの「、」は、前のかたまりにくっつける */
+  return set._seg={parts,found}}
 /* 正解の演出：毎回は大きな◯、その問題をやり切ったとき（最後の段階）は紙吹雪も */
 function celebrate(){const last=st&&st.si===st.steps.length-1;
   const reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
