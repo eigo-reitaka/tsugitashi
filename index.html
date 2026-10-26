@@ -504,7 +504,7 @@ const AUDIO=new Proxy({},{get:(o,t)=>AUDIO_ID[t]?"audio/"+AUDIO_ID[t]+".mp3":und
 const KEY="tsugitashi_v1";
 let store=load();
 /* 保存データが古い・一部欠けている場合も、足りない項目を補って起動できるようにする */
-function load(){const def={v:1,sets:{},days:{},tests:{},settings:{judge:"mic",rate:0.9,input:"voice"}};
+function load(){const def={v:1,sets:{},days:{},tests:{},settings:{judge:"mic",rate:0.9,input:"voice",se:true}};
   try{const v=JSON.parse(localStorage.getItem(KEY)||"null");if(v&&v.v===1&&typeof v==="object"){
     const o={...def,...v};["sets","days","tests"].forEach(k=>{if(!o[k]||typeof o[k]!=="object")o[k]={}});
     o.settings={...def.settings,...(v.settings&&typeof v.settings==="object"?v.settings:{})};
@@ -559,13 +559,20 @@ if("speechSynthesis" in window){pickVoice();speechSynthesis.onvoiceschanged=pick
 let curAudio=null;
 function speak(text){
   if(curAudio){curAudio.pause();curAudio=null}
-  if(AUDIO[text]&&!audioBroken){const a=new Audio(AUDIO[text]);curAudio=a;a.preservesPitch=true;a.playbackRate=store.settings.rate<0.85?0.8:1;
+  if(AUDIO[text]&&!audioBroken){const a=new Audio(AUDIO[text]);curAudio=a;a.preservesPitch=true;a.playbackRate=store.settings.rate<0.85?0.8:store.settings.rate>1?1.15:1;
     /* 音声ファイルが読めない場所（プレビューなど）では、端末の読み上げに切り替える */
     a.onerror=()=>{audioBroken=true;if(curAudio===a){curAudio=null;tts(text)}};
     a.play().catch(e=>{if(e&&e.name==="NotSupportedError")a.onerror()});return}
   tts(text);
 }
 let audioBroken=false;
+/* ============ 効果音（効果音ラボの素材。se/ フォルダ） ============
+   お試し：各ステップの最初の5問だけで鳴らす。正解・不正解は毎回、ステップの対象の問題を全部終えたら完了音 */
+const SE_TRIAL=5;
+const SE={};["correct","wrong","complete"].forEach(k=>{try{const a=new Audio("se/"+k+".mp3");a.preload="auto";SE[k]=a}catch(e){}});
+function seOn(set){if(store.settings.se===false||!set||!sess||sess.mode!=="practice")return false;
+  const l=LEVELS[set.lv-1];return !!l&&l.ids.slice(0,SE_TRIAL).includes(set.id)}
+function playSE(k){const a=SE[k];if(!a)return;try{const c=a.cloneNode();c.play().catch(()=>{})}catch(e){}}
 function tts(text){
   if(!("speechSynthesis" in window))return;
   speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=store.settings.rate;if(voice)u.voice=voice;speechSynthesis.speak(u);
@@ -991,11 +998,11 @@ function nextIndex(ids){let i=ids.findIndex(id=>!store.sets[id]);if(i<0)i=ids.fi
 function renderLevel(){
   const l=LEVELS[lvView-1];const ids=l.ids;const nx=nextIndex(ids);
   let inner="";
-  if(l.n===1){inner=`<section class="glass panel"><h2>ステップ1　まず結論を言う</h2><p class="small">日本語から「結論」を選びます。いつ・どこで・どんな、は後回し。</p></section>`}
+  if(l.n===1){inner=`<section class="glass panel"><h2>ステップ1　まず結論を言う</h2><p class="small">日本語から「結論」を選びます。いつ・どこで・どんな、は後回し。</p>${marks(ids)}</section>`}
   else{const desc={2:"結論の文を言ってから、情報を1つずつ後ろに足します。",3:"短い文を言ってから、and・but・soなどで次の話をつなぎます。",4:"人や物を言ってから、that・whoで説明を足します。",5:"ここまでの足し方を全部組み合わせて、長い文を組み立てます。"}[l.n];
     inner=`<section class="glass panel"><h2>ステップ${l.n}　${l.name}</h2><p class="small">${desc}</p>
     <div class="cats">${CATS[l.n].map(c=>{const cids=SETS.filter(s=>s.lv===l.n&&s.cat===c.k).map(s=>s.id);
-      return`<div class="cat" style="--c:var(${TY(c.k).c})"><span class="nm"><i></i>${c.name}</span><span class="en">${c.en}</span></div>`}).join("")}</div></section>`}
+      return`<button class="cat" style="--c:var(${TY(c.k).c})" data-act="start" data-ids="${cids.join(",")}"><span class="nm"><i></i>${c.name}</span><span class="en">${c.en}</span>${marks(cids)}</button>`}).join("")}</div></section>`}
   /* 問題一覧：これまでの記録と「ここから始める」 */
   inner+=`<section class="glass panel"><h2>問題一覧</h2><p class="small">タップすると、その問題から始められます</p><div class="hist">${ids.map((id,i)=>{const r=lastRes(id);
     return`<button class="hrow ${i===nx?"next":""}" data-act="from" data-lv="${l.n}" data-i="${i}"><span class="hn">${i+1}</span><span class="q">${esc(BYID[id].jp)}</span>${i===nx?'<span class="pill">次はここから</span>':`<span class="chip ${r||"none"}">${r?RES_LABEL[r]:"未挑戦"}</span>`}</button>`}).join("")}</div></section>`;
@@ -1038,6 +1045,7 @@ function renderRecord(){
     <button class="big" data-act="start" data-ids="${rev.join(",")}">まとめて復習する</button></section>`:""}
   <section class="glass panel"><h2>設定</h2>
     <div class="setting"><span>アプリの使い方</span><button class="chipbtn" data-act="intro">使い方を見る</button></div>
+    <div class="setting"><span>効果音</span><span class="seg glass"><button class="${store.settings.se!==false?"on":""}" data-act="se" data-v="on">オン</button><button class="${store.settings.se===false?"on":""}" data-act="se" data-v="off">オフ</button></span></div>
     <div class="setting"><span>練習方法</span><span class="seg glass"><button class="${inputMode()==="voice"?"on":""}" data-act="input" data-v="voice">声に出す</button><button class="${inputMode()==="type"?"on":""}" data-act="input" data-v="type">タイピング</button></span></div>
     <div class="setting"><span>声に出すときの判定</span><span class="seg glass"><button class="${store.settings.judge==="mic"?"on":""}" data-act="judge" data-v="mic">マイク</button><button class="${store.settings.judge==="self"?"on":""}" data-act="judge" data-v="self">自分で</button></span></div>
     <div class="setting"><span>お手本の速さ</span><span class="seg glass"><button class="${R===0.75?"on":""}" data-act="rate" data-v="0.75">ゆっくり</button><button class="${R===0.9?"on":""}" data-act="rate" data-v="0.9">ふつう</button><button class="${R===1.05?"on":""}" data-act="rate" data-v="1.05">速め</button></span></div>
@@ -1110,10 +1118,10 @@ function renderPractice(){
   let h2="",sub="",stage="",under="",dock="";
   if(s.k==="pick"){
     const solved=st.picked.some(o=>o.ok),last=st.picked[st.picked.length-1];
-    h2="結論を言ってみよう！";sub="まずは英文ではなく日本語からやってみよう";
+    h2="結論を言ってみよう！";sub="詳しい説明は後回し。短い文を選ぼう";
     stage=`<div class="opts">${st.opts.map((o,i)=>{const p=st.picked.includes(o);return`<button class="opt ${p?(o.ok?"right":"wrong"):""}" data-act="pick" data-i="${i}" ${solved?"disabled":""}>${esc(o.t)}</button>`}).join("")}</div>`;
-    if(last&&!last.ok)stage+=`<div class="note ng">ナイスチャレンジ！でも、${last.why==="full"?"それは全部です。いきなり全部を英語にせず、まずは短い結論だけ。":"「"+esc(last.t)+"」は、あとで後ろに足す情報です。"}<br>もう一度選んでみよう！！</div>`;
-    if(solved)stage+=`<div class="note ok">まずは「${esc(set.coreJp)}」から。${set.adds.map(a=>"「"+esc(a.jp)+"」").join("")}は、あとで足します。<br>実際に英文を作るのはステップ2からやっていきます！</div>`;
+    if(last&&!last.ok)stage+=`<div class="note ng">${last.why==="full"?"それは全部です。いきなり全部を英語にせず、まずは短い結論だけ。":"「"+esc(last.t)+"」は、あとで後ろに足す情報です。"}</div>`;
+    if(solved)stage+=`<div class="note ok">まずは「${esc(set.coreJp)}」から。${set.adds.map(a=>"「"+esc(a.jp)+"」").join("")}は、あとで足します。</div>`;
     dock=`<button class="big" data-act="next" ${solved?"":"disabled"}>${solved?(sess.i+1<sess.ids.length?"次の問題へ":"結果を見る"):"結論を選んでください"}</button>`;
   }else if(s.k==="preview"){
     h2="結論の文が言えました";sub="残りは、後ろに足していく情報です";
@@ -1136,7 +1144,7 @@ function renderPractice(){
       dock="";under="";
     }else if(DONE.includes(st.ph)){
       const r=st.res[st.si];
-      stage+=`<div class="answer"><div class="note ${r==="ng"?"ng":"ok"}">${r==="ok"?"言えました！":r==="hint"?"ヒントを使って言えました。":"ナイスチャレンジ！お手本を聞いて、まねして言ってから次へ進もう！"}</div>
+      stage+=`<div class="answer"><div class="note ${r==="ng"?"ng":"ok"}">${r==="ok"?"言えました！":r==="hint"?"ヒントを使って言えました。":"お手本を聞いて、まねして言ってから次へ。"}</div>
         <span class="en">${esc(stepAnswer())}</span><button class="play" data-act="play" data-t="${esc(stepAnswer())}">${IC.spk}お手本</button>
         ${st.heard?`<span class="heard">${st.via==="type"?"入力":"聞き取り"}：${esc(st.heard)}</span>`:""}</div>`;
       dock=`<button class="big" data-act="next">${st.si===st.steps.length-1?(sess.i+1<sess.ids.length?"次の問題へ":"結果を見る"):"次へ"}</button>`;
@@ -1146,13 +1154,13 @@ function renderPractice(){
     }else if(inputMode()==="type"){
       stage+=`<div class="typewrap"><label class="small" for="ans">英語で入力してください</label>
         <input id="ans" class="en" type="text" value="${esc(st.typed||"")}" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false" lang="en" enterkeyhint="done" placeholder="${s.k==="add"?"続きだけでも、最初からでもOK":""}"></div>`;
-      if(st.ph==="retry")stage+=`<div class="note hi">ナイスチャレンジ！でも、単語が足りないか、違う単語があります。<br>もう一度入力してみよう！！<br>分からない場合は「答えを見る」に進みましょう👍️✨️<br>正解するより、まずはどんどん進めることがオススメです。</div>`;
+      if(st.ph==="retry")stage+=`<div class="note hi">惜しいです！単語が足りないか、違う単語があります。<br>分からない場合は「答えを見る」に進みましょう👍️✨️<br>正解するより、まずはどんどん進めることがオススメです。</div>`;
       dock=`<button class="big lite" data-act="giveup">答えを見る</button><button class="big" data-act="typecheck">答え合わせ</button>`;
     }else if(mode==="mic"){
       const lis=st.ph==="listening";
       stage+=`<div class="micwrap"><button class="micbtn ${lis?"listening":""}" data-act="mic" aria-label="${lis?"止める":"話す"}"><span>${IC.mic}<small>${lis?"止めて判定":"話す"}</small></span></button>
         <div class="heard" id="heard">${lis?"聞いています。話し終わったら少し待つか、ボタンを押してください":st.ph==="retry"?"聞き取り：「"+esc(st.heard||"聞き取れませんでした")+"」":"押してから英語で話してください"}</div></div>`;
-      if(st.ph==="retry")stage+=`<div class="note hi">ナイスチャレンジ！でも、聞き取った英語が答えと少し違います。<br>もう一度、またはヒントを見てから言ってみよう！！</div>`;
+      if(st.ph==="retry")stage+=`<div class="note hi">惜しい！もう一度、またはヒントを見てから挑戦してみよう。</div>`;
       dock=`<button class="big lite" data-act="giveup">答えを見る</button>`;
     }else{
       stage+=`<div class="micwrap"><p class="small" style="text-align:center">まず声に出して言ってから、<br>下のボタンで答えを確認します。</p></div>`;
@@ -1187,13 +1195,16 @@ function finishSet(){
   const set=st.set;const order={ok:0,hint:1,ng:2};let worst="ok",stuck=null;
   st.steps.forEach((x,i)=>{const r=st.res[i];if(!r)return;if(order[r]>order[worst])worst=r;if(r!=="ok"&&!stuck)stuck=stepLabel(set,x.k,x.i)});
   if(isTest()){store.tests=store.tests||{};const x=store.tests[sess.mode]||{n:0,ok:0};x.n++;if(worst==="ok")x.ok++;store.tests[sess.mode]=x}
-  else{const rec=store.sets[set.id]||{n:0,okN:0,hist:[]};
+  let seWasNew=false;
+  if(!isTest()){seWasNew=!store.sets[set.id];const rec=store.sets[set.id]||{n:0,okN:0,hist:[]};
   rec.n++;if(worst==="ok")rec.okN++;rec.last={t:Date.now(),res:worst,stuck};rec.hist=[...rec.hist,{t:Date.now(),res:worst,stuck}].slice(-6);
   store.sets[set.id]=rec}
   store.days[today()]=(store.days[today()]||0)+1;save();
   sess.res.push({id:set.id,res:worst,stuck});sess.i++;
   if(isTest()&&sess.i>=sess.ids.length){const x=store.tests[sess.mode];const okN=sess.res.filter(r=>r.res==="ok").length;
     x.last={ok:okN,total:sess.ids.length,t:Date.now()};x.best=Math.max(x.best||0,okN);save()}
+  /* お試し対象の問題を、この1問で全部解き終えたら完了音（初めて全部そろった瞬間に1回） */
+  if(seWasNew&&seOn(set)&&LEVELS[set.lv-1].ids.slice(0,SE_TRIAL).every(id=>store.sets[id]))setTimeout(()=>playSE("complete"),150);
   if(sess.i>=sess.ids.length){view="summary"}else startSet();
   render();window.scrollTo(0,0);
 }
@@ -1233,16 +1244,17 @@ app.addEventListener("click",async e=>{
   else if(act==="judge"){store.settings.judge=b.dataset.v;save();render()}
   else if(act==="rate"){store.settings.rate=+b.dataset.v;save();render();if(view!=="practice")speak("I had breakfast at the hotel this morning.")}
   else if(act==="quit"){stopRec();view=backTo||"home";render()}
-  else if(act==="pick"){const o=st.opts[+b.dataset.i];if(st.picked.includes(o))return;st.picked.push(o);if(o.ok)setResult(st.picked.length===1?"ok":"hint");render()}
+  else if(act==="pick"){const o=st.opts[+b.dataset.i];if(st.picked.includes(o))return;st.picked.push(o);if(o.ok)setResult(st.picked.length===1?"ok":"hint");if(seOn(st.set))playSE(o.ok?"correct":"wrong");render()}
   else if(act==="next"){snap();st.si++;st.ph="ready";st.hint=0;st.heard="";st.typed="";st.via="";banner="";if(st.si>=st.steps.length)return finishSet();
     if(["core","full"].includes(curStep().k)&&!sess.chosen)st.ph="choose";render();if(st.ph==="ready"&&inputMode()==="type")focusAns()}
   else if(act==="choose"){snap();store.settings.input=b.dataset.v;save();sess.chosen=true;st.ph="ready";render();if(inputMode()==="type")focusAns()}
   else if(act==="finishSet"){snap();finishSet()}
   else if(act==="play"){speak(b.dataset.t)}
+  else if(act==="se"){store.settings.se=b.dataset.v==="on";save();render();if(store.settings.se)playSE("correct")}
   else if(act==="hint"){st.hint++;render();if(inputMode()==="type")focusAns()}
   else if(act==="giveup"){stopRec();setResult("ng");st.ph="revealed";render()}
   else if(act==="reveal-self"){st.ph="selfcheck";render()}
-  else if(act==="self"){setResult(b.dataset.v==="ok"?(st.hint?"hint":"ok"):"ng");st.ph="checked";render()}
+  else if(act==="self"){setResult(b.dataset.v==="ok"?(st.hint?"hint":"ok"):"ng");if(seOn(st.set))playSE(b.dataset.v==="ok"?"correct":"wrong");st.ph="checked";render()}
   else if(act==="override"){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
   else if(act==="copyurl"){const url=location.href.split("#")[0];
     const done=()=>{b.textContent="コピーしました"};
@@ -1254,16 +1266,16 @@ app.addEventListener("click",async e=>{
     if(r.err&&micBlocked){banner="この画面ではマイクが使えなかったので、「自分で判定」に切り替えました。";st.ph="ready";render();return}
     const said=r.said||[];st.heard=said[0]||"";
     st.via="voice";
-    if(passes(said,stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
-    else{st.ph="retry";render()}
+    if(passes(said,stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";if(seOn(st.set))playSE("correct");render()}
+    else{st.ph="retry";if(seOn(st.set))playSE("wrong");render()}
   }
 });
 function focusAns(){const el=document.getElementById("ans");if(el){el.focus();const n=el.value.length;try{el.setSelectionRange(n,n)}catch(e){}}}
 function typeCheck(){const v=(document.getElementById("ans")?.value||"").trim();if(!v){focusAns();return}
   st.typed=v;st.heard=v;st.via="type";
-  if(passes([v],stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
+  if(passes([v],stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";if(seOn(st.set))playSE("correct");render()}
   else if(st.ph==="retry"){setResult("ng");st.ph="revealed";render()}
-  else{st.ph="retry";render();focusAns()}}
+  else{st.ph="retry";if(seOn(st.set))playSE("wrong");render();focusAns()}}
 app.addEventListener("input",e=>{if(e.target.id==="ans"&&st)st.typed=e.target.value});
 app.addEventListener("keydown",e=>{if(e.target.id==="ans"&&e.key==="Enter"&&!e.isComposing){e.preventDefault();typeCheck()}});
 function stopRec(){if(recCtl)recCtl.stop();else{try{rec&&rec.stop()}catch(e){}}}
