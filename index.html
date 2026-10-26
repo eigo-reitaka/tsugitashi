@@ -993,7 +993,7 @@ function renderLevel(){
   inner+=`<section class="glass panel"><h2>問題一覧</h2><p class="small">タップすると、その問題から始められます</p><div class="hist">${ids.map((id,i)=>{const r=lastRes(id);
     return`<button class="hrow ${i===nx?"next":""}" data-act="from" data-lv="${l.n}" data-i="${i}"><span class="hn">${i+1}</span><span class="q">${esc(BYID[id].jp)}</span>${i===nx?'<span class="pill">次はここから</span>':`<span class="chip ${r||"none"}">${r?RES_LABEL[r]:"未挑戦"}</span>`}</button>`}).join("")}</div></section>`;
   app.innerHTML=navTop("ステップ"+l.n,ids.filter(id=>lastRes(id)==="ok").length+" / "+ids.length)+inner+
-  `<div class="dock three"><button class="big lite" data-act="random" data-lv="${l.n}">ランダム5問</button><button class="big out" data-act="start" data-ids="${ids.join(",")}">最初から</button><button class="big" data-act="from" data-lv="${l.n}" data-i="${Math.max(nx,0)}">続きから<small>${Math.max(nx,0)+1}問目から</small></button></div>`;
+  `<div class="dock three"><button class="big out" data-act="start" data-ids="${ids.join(",")}">最初から</button><button class="big" data-act="from" data-lv="${l.n}" data-i="${Math.max(nx,0)}">続きから<small>${Math.max(nx,0)+1}問目から</small></button></div>`;
 }
 
 function renderLibrary(){
