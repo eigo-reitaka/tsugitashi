@@ -517,7 +517,10 @@ const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth
 /* ============ 判定 ============ */
 const CON={"i'm":"i am","you're":"you are","we're":"we are","they're":"they are","it's":"it is","that's":"that is","there's":"there is","who's":"who is","i'd":"i would","you'd":"you would","i'll":"i will","you'll":"you will","we'll":"we will","let's":"let us","can't":"can not","cannot":"can not","don't":"do not","doesn't":"does not","didn't":"did not","isn't":"is not","aren't":"are not","wasn't":"was not","won't":"will not","hasn't":"has not","i've":"i have"};
 const NUM={one:"1",two:"2",three:"3",four:"4",five:"5",six:"6",seven:"7",eight:"8",nine:"9",ten:"10",fifteen:"15",twenty:"20",thirty:"30"};
-const SYN={bicycle:"bike",photo:"picture",photos:"pictures"};
+/* 同じ意味として扱う言い方（答える側・お手本の両方をそろえてから比べる） */
+const SYN={bicycle:"bike",photo:"picture",photos:"pictures",photograph:"picture",photographs:"pictures",
+  great:"good",delicious:"good",tasty:"good",souvenir:"gift",souvenirs:"gifts",colleague:"coworker",colleagues:"coworkers",cinema:"theater",theatre:"theater",
+  ate:"had",eat:"have",eating:"having",eaten:"had",drank:"had",drink:"have",drinking:"having",saw:"watched"};
 const DROP=new Set(["a","an","the","some","um","uh","ah","er","oh"]);
 function norm(s){
   s=String(s).toLowerCase().replace(/[’‘`]/g,"'").replace(/[^a-z0-9' ]+/g," ");
@@ -525,6 +528,7 @@ function norm(s){
     .map(w=>NUM[w]||SYN[w]||w).join(" ")
     /* 同じ意味の言い方をそろえる（別解として扱う） */
     .replace(/\bwould like to\b/g,"want to").replace(/\bwould like\b/g,"want").replace(/\bwould love to\b/g,"want to")
+    .replace(/\bco worker/g,"coworker").replace(/\bmovie theater\b/g,"theater")
     .replace(/\bcould you\b/g,"can you").replace(/\bwould you\b/g,"can you").replace(/\bcould i\b/g,"can i").replace(/\bmay i\b/g,"can i")
     .split(" ").filter(w=>w&&!DROP.has(w));
 }
@@ -533,7 +537,12 @@ const same=(x,y)=>x===y||(x.length>=5&&y.length>=5&&lev1(x,y));
 function lcs(a,b){const d=Array(b.length+1).fill(0);for(let i=1;i<=a.length;i++){let p=0;for(let j=1;j<=b.length;j++){const t=d[j];d[j]=same(a[i-1],b[j-1])?p+1:Math.max(d[j],d[j-1]);p=t}}return d[b.length]}
 function score(said,target){const t=norm(target),s=norm(said);if(!t.length)return 1;return lcs(t,s)/t.length}
 /* 4文字以上の単語（意味の中心になる語）は全部そろっていること＋全体の8割以上が一致 */
-function keyWordsOk(said,target){const s=norm(said);return norm(target).filter(w=>w.length>=4).every(w=>s.some(x=>same(w,x)))}
+/* 意味の中心になりにくい語（なくても意味が変わらない）は、そろっていなくてもよい。数字は必ずそろえる */
+const KW_SKIP=new Set(["there","then","also","very","really","still","just","here","that","which"]);
+/* 3文字の語は、つなぎの語以外（car・bus・son・big など）を必ずそろえる。not / no / never（否定）も必ずそろえる */
+const FUNC3=new Set(["and","but","for","you","are","was","can","him","her","his","its","our","she","who","how","why","all","any","too","yet","get","got","has","had","did","let","say","way","off","out","now","new","one","two","six","ten","lot","bit"]);
+const isKey=w=>/^\d+$/.test(w)||w==="not"||w==="no"||w==="never"||(w.length>=4&&!KW_SKIP.has(w))||(w.length===3&&!FUNC3.has(w));
+function keyWordsOk(said,target){const s=norm(said);return norm(target).filter(isKey).every(w=>s.some(x=>same(w,x)))}
 function passes(saidList,targets){
   let best=0;for(const s of saidList)for(const t of targets){const sc=score(s,t);const need=norm(t).length<=3?1:0.8;if(sc>=need&&keyWordsOk(s,t))return{ok:true,sc};best=Math.max(best,sc)}
   return{ok:false,sc:best};
@@ -543,11 +552,31 @@ const endP=s=>(s.match(/[.?!]$/)||["."])[0];
 function joinParts(core,ens,adds){let out=strip(core);ens.forEach((en,i)=>{out+=(COMMA.has(adds[i].t)?", ":" ")+en});
   const last=ens[ens.length-1]||"";return /[.?!]$/.test(last)?out:out+endP(core)}
 function fullOf(set){return joinParts(set.core,set.adds.map(a=>a.en),set.adds)}
+/* 全文の正解パターン：各部品の別解の組み合わせ＋「どこで・いつ・誰と」などの順番の入れ替え＋「いつ」を文頭に出す形 */
+const ADV=new Set(["place","time","with","by","for","prep","about","from","before","after","until","without"]);
+function perms(a){if(a.length<=1)return[a];const out=[];a.forEach((x,i)=>perms([...a.slice(0,i),...a.slice(i+1)]).forEach(p=>out.push([x,...p])));return out}
 function fullTargets(set){
-  const out=[];
-  for(const c of [set.core,...set.alt])out.push(joinParts(c,set.adds.map(a=>a.en),set.adds));
-  set.adds.forEach((a,i)=>a.alt.forEach(al=>out.push(joinParts(set.core,set.adds.map((b,j)=>j===i?al:b.en),set.adds))));
-  return out;
+  const out=new Set();const MAX=400;
+  const cores=[set.core,...(set.alt||[])];
+  const opts=set.adds.map(a=>[a.en,...(a.alt||[])].filter(Boolean));
+  /* 別解の組み合わせ（多すぎるときは途中まで） */
+  let combos=[[]];for(const o of opts){const next=[];for(const c of combos)for(const x of o){if(next.length<MAX)next.push([...c,x])}combos=next}
+  /* 順番の入れ替え：となり合う「どこで・いつ…」のかたまりの中だけ */
+  const orders=[];{let cur=[[...Array(set.adds.length).keys()]];
+    let i=0;const idx=[...Array(set.adds.length).keys()];const groups=[];
+    while(i<idx.length){if(ADV.has(set.adds[i].t)){let j=i;while(j<idx.length&&ADV.has(set.adds[j].t))j++;groups.push(idx.slice(i,j));i=j}else{groups.push([i]);i++}}
+    let res=[[]];for(const g of groups){const ps=g.length>1&&g.length<=3?perms(g):[g];const nx=[];for(const r of res)for(const p of ps)nx.push([...r,...p]);res=nx}
+    orders.push(...res)}
+  for(const c of cores)for(const cb of combos){
+    for(const ord of orders){if(out.size>=MAX)break;
+      out.add(joinParts(c,ord.map(k=>cb[k]),ord.map(k=>set.adds[k])))}
+    /* 「今朝、〜」のように、いつを文頭に出す言い方 */
+    const ti=set.adds.findIndex(a=>a.t==="time");
+    if(ti>=0&&out.size<MAX){const rest=set.adds.map((a,k)=>k).filter(k=>k!==ti);const first=cb[ti].charAt(0).toUpperCase()+cb[ti].slice(1);
+      const lower=strip(c).replace(/^(I|I'm|I'll|I'd)\b/,m=>m).replace(/^([A-Z])(?![A-Z'])/,(m)=>m==="I"?m:m.toLowerCase());
+      out.add(first+" "+joinParts(lower,rest.map(k=>cb[k]),rest.map(k=>set.adds[k])))}
+  }
+  return [...out];
 }
 
 /* ============ 音声 ============ */
