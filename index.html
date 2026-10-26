@@ -504,7 +504,7 @@ const AUDIO=new Proxy({},{get:(o,t)=>AUDIO_ID[t]?"audio/"+AUDIO_ID[t]+".mp3":und
 const KEY="tsugitashi_v1";
 let store=load();
 /* 保存データが古い・一部欠けている場合も、足りない項目を補って起動できるようにする */
-function load(){const def={v:1,sets:{},days:{},tests:{},settings:{judge:"mic",rate:0.9,input:"voice",se:true}};
+function load(){const def={v:1,sets:{},days:{},tests:{},settings:{judge:"mic",rate:0.9,input:"voice"}};
   try{const v=JSON.parse(localStorage.getItem(KEY)||"null");if(v&&v.v===1&&typeof v==="object"){
     const o={...def,...v};["sets","days","tests"].forEach(k=>{if(!o[k]||typeof o[k]!=="object")o[k]={}});
     o.settings={...def.settings,...(v.settings&&typeof v.settings==="object"?v.settings:{})};
@@ -566,14 +566,7 @@ function speak(text){
   tts(text);
 }
 let audioBroken=false;
-/* ============ 効果音（効果音ラボの素材。se/ フォルダ） ============
-   お試し：各ステップの最初の5問だけで鳴らす。正解・不正解は毎回、ステップの対象の問題を全部終えたら完了音 */
-const SE_TRIAL=5;
-const SE={};["correct","wrong","complete"].forEach(k=>{try{const a=new Audio("se/"+k+".mp3");a.preload="auto";SE[k]=a}catch(e){}});
-function seOn(set){if(store.settings.se===false||!set||!sess||sess.mode!=="practice")return false;
-  const l=LEVELS[set.lv-1];return !!l&&l.ids.slice(0,SE_TRIAL).includes(set.id)}
 const sePlaying=new Set();
-function playSE(k){const a=SE[k];if(!a)return;try{const c=a.cloneNode();sePlaying.add(c);c.onended=()=>sePlaying.delete(c);c.play().catch(()=>sePlaying.delete(c))}catch(e){}}
 /* マイクを使う前に、鳴っている音（お手本・効果音・読み上げ）を全部止める。iPhoneでは音が鳴っているとマイクが動かないことがある */
 function stopAllSound(){let was=false;
   if(curAudio){was=!curAudio.paused;curAudio.pause();curAudio=null}
@@ -1060,7 +1053,6 @@ function renderRecord(){
     <button class="big" data-act="start" data-ids="${rev.join(",")}">まとめて復習する</button></section>`:""}
   <section class="glass panel"><h2>設定</h2>
     <div class="setting"><span>アプリの使い方</span><button class="chipbtn" data-act="intro">使い方を見る</button></div>
-    <div class="setting"><span>効果音</span><span class="seg glass"><button class="${store.settings.se!==false?"on":""}" data-act="se" data-v="on">オン</button><button class="${store.settings.se===false?"on":""}" data-act="se" data-v="off">オフ</button></span></div>
     <div class="setting"><span>練習方法</span><span class="seg glass"><button class="${inputMode()==="voice"?"on":""}" data-act="input" data-v="voice">声に出す</button><button class="${inputMode()==="type"?"on":""}" data-act="input" data-v="type">タイピング</button></span></div>
     <div class="setting"><span>声に出すときの判定</span><span class="seg glass"><button class="${store.settings.judge==="mic"?"on":""}" data-act="judge" data-v="mic">マイク</button><button class="${store.settings.judge==="self"?"on":""}" data-act="judge" data-v="self">自分で</button></span></div>
     <div class="setting"><span>お手本の速さ</span><span class="seg glass"><button class="${R===0.75?"on":""}" data-act="rate" data-v="0.75">ゆっくり</button><button class="${R===0.9?"on":""}" data-act="rate" data-v="0.9">ふつう</button><button class="${R===1.05?"on":""}" data-act="rate" data-v="1.05">速め</button></span></div>
@@ -1210,16 +1202,13 @@ function finishSet(){
   const set=st.set;const order={ok:0,hint:1,ng:2};let worst="ok",stuck=null;
   st.steps.forEach((x,i)=>{const r=st.res[i];if(!r)return;if(order[r]>order[worst])worst=r;if(r!=="ok"&&!stuck)stuck=stepLabel(set,x.k,x.i)});
   if(isTest()){store.tests=store.tests||{};const x=store.tests[sess.mode]||{n:0,ok:0};x.n++;if(worst==="ok")x.ok++;store.tests[sess.mode]=x}
-  let seWasNew=false;
-  if(!isTest()){seWasNew=!store.sets[set.id];const rec=store.sets[set.id]||{n:0,okN:0,hist:[]};
+  if(!isTest()){const rec=store.sets[set.id]||{n:0,okN:0,hist:[]};
   rec.n++;if(worst==="ok")rec.okN++;rec.last={t:Date.now(),res:worst,stuck};rec.hist=[...rec.hist,{t:Date.now(),res:worst,stuck}].slice(-6);
   store.sets[set.id]=rec}
   store.days[today()]=(store.days[today()]||0)+1;save();
   sess.res.push({id:set.id,res:worst,stuck});sess.i++;
   if(isTest()&&sess.i>=sess.ids.length){const x=store.tests[sess.mode];const okN=sess.res.filter(r=>r.res==="ok").length;
     x.last={ok:okN,total:sess.ids.length,t:Date.now()};x.best=Math.max(x.best||0,okN);save()}
-  /* お試し対象の問題を、この1問で全部解き終えたら完了音（初めて全部そろった瞬間に1回） */
-  if(seWasNew&&seOn(set)&&LEVELS[set.lv-1].ids.slice(0,SE_TRIAL).every(id=>store.sets[id]))setTimeout(()=>playSE("complete"),150);
   if(sess.i>=sess.ids.length){view="summary"}else startSet();
   render();window.scrollTo(0,0);
 }
@@ -1259,17 +1248,16 @@ app.addEventListener("click",async e=>{
   else if(act==="judge"){store.settings.judge=b.dataset.v;save();render()}
   else if(act==="rate"){store.settings.rate=+b.dataset.v;save();render();if(view!=="practice")speak("I had breakfast at the hotel this morning.")}
   else if(act==="quit"){stopRec();view=backTo||"home";render()}
-  else if(act==="pick"){const o=st.opts[+b.dataset.i];if(st.picked.includes(o))return;st.picked.push(o);if(o.ok)setResult(st.picked.length===1?"ok":"hint");if(seOn(st.set))playSE(o.ok?"correct":"wrong");render()}
+  else if(act==="pick"){const o=st.opts[+b.dataset.i];if(st.picked.includes(o))return;st.picked.push(o);if(o.ok)setResult(st.picked.length===1?"ok":"hint");render()}
   else if(act==="next"){snap();st.si++;st.ph="ready";st.hint=0;st.heard="";st.typed="";st.via="";banner="";if(st.si>=st.steps.length)return finishSet();
     if(["core","full"].includes(curStep().k)&&!sess.chosen)st.ph="choose";render();if(st.ph==="ready"&&inputMode()==="type")focusAns()}
   else if(act==="choose"){snap();store.settings.input=b.dataset.v;save();sess.chosen=true;st.ph="ready";render();if(inputMode()==="type")focusAns()}
   else if(act==="finishSet"){snap();finishSet()}
   else if(act==="play"){speak(b.dataset.t)}
-  else if(act==="se"){store.settings.se=b.dataset.v==="on";save();render();if(store.settings.se)playSE("correct")}
   else if(act==="hint"){st.hint++;render();if(inputMode()==="type")focusAns()}
   else if(act==="giveup"){stopRec();setResult("ng");st.ph="revealed";render()}
   else if(act==="reveal-self"){st.ph="selfcheck";render()}
-  else if(act==="self"){setResult(b.dataset.v==="ok"?(st.hint?"hint":"ok"):"ng");if(seOn(st.set))playSE(b.dataset.v==="ok"?"correct":"wrong");st.ph="checked";render()}
+  else if(act==="self"){setResult(b.dataset.v==="ok"?(st.hint?"hint":"ok"):"ng");st.ph="checked";render()}
   else if(act==="override"){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
   else if(act==="copyurl"){const url=location.href.split("#")[0];
     const done=()=>{b.textContent="コピーしました"};
@@ -1282,16 +1270,16 @@ app.addEventListener("click",async e=>{
     if(r.err&&!(r.said||[]).length){banner=r.err==="network"?"通信が不安定で聞き取れませんでした。電波のよい場所で、もう一度マイクを押してください。":r.err==="no-start"||r.err==="audio-capture"||r.err==="start"?"マイクがうまく起動しませんでした。もう一度マイクを押してください。":"うまく聞き取れませんでした。もう一度マイクを押してください。";st.ph="ready";render();return}
     const said=r.said||[];st.heard=said[0]||"";
     st.via="voice";
-    if(passes(said,stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";if(seOn(st.set))playSE("correct");render()}
-    else{st.ph="retry";if(seOn(st.set))playSE("wrong");render()}
+    if(passes(said,stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
+    else{st.ph="retry";render()}
   }
 });
 function focusAns(){const el=document.getElementById("ans");if(el){el.focus();const n=el.value.length;try{el.setSelectionRange(n,n)}catch(e){}}}
 function typeCheck(){const v=(document.getElementById("ans")?.value||"").trim();if(!v){focusAns();return}
   st.typed=v;st.heard=v;st.via="type";
-  if(passes([v],stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";if(seOn(st.set))playSE("correct");render()}
+  if(passes([v],stepTargets()).ok){setResult(st.hint?"hint":"ok");st.ph="passed";render()}
   else if(st.ph==="retry"){setResult("ng");st.ph="revealed";render()}
-  else{st.ph="retry";if(seOn(st.set))playSE("wrong");render();focusAns()}}
+  else{st.ph="retry";render();focusAns()}}
 app.addEventListener("input",e=>{if(e.target.id==="ans"&&st)st.typed=e.target.value});
 app.addEventListener("keydown",e=>{if(e.target.id==="ans"&&e.key==="Enter"&&!e.isComposing){e.preventDefault();typeCheck()}});
 function stopRec(){if(recCtl)recCtl.stop();else{try{rec&&rec.stop()}catch(e){}}}
