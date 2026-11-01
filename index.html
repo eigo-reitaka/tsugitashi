@@ -1139,6 +1139,7 @@ function goBack(){stopRec();banner="";
 function startSession(ids,mode="practice"){phist=[];backTo=view==="practice"||view==="summary"?backTo:view;sess={ids,i:0,res:[],chosen:false,mode};startSet();view="practice";render();window.scrollTo(0,0)}
 function startSet(){
   const set=BYID[sess.ids[sess.i]];
+  if(sess.again&&sess.again.includes(set.id)&&sess.ids.indexOf(set.id)<sess.i)banner="さっきとばした問題です。答えを思い出しながら、もう一度挑戦してみよう。";
   /* ステップ1だけ「結論を選ぶ」から。ステップ2以降は英語にするところから */
   const steps=(isTest()||sess.direct)?[{k:"full"}]:set.lv===1?[{k:"pick"}]:[{k:"core"}];
   if(!isTest()&&!sess.direct&&set.lv!==1){set.adds.forEach((a,i)=>steps.push({k:"add",i}));steps.push({k:"full"})}
@@ -1245,6 +1246,10 @@ function renderPractice(){
     const R=store.settings.rate;
     if(DONE.includes(st.ph)||st.ph==="selfcheck")under+=`<div class="seg glass"><button class="${R===0.75?"on":""}" data-act="rate" data-v="0.75">ゆっくり</button><button class="${R===0.9?"on":""}" data-act="rate" data-v="0.9">ふつう</button></div>`;
   }
+  /* わからないときは、いつでもこの問題をとばせる（不正解として記録し、練習なら最後にもう一度出す） */
+  const lastDone=DONE.includes(st.ph)&&st.si===st.steps.length-1;
+  const pickDone=s.k==="pick"&&st.picked.some(o=>o.ok);
+  if(st.ph!=="choose"&&!lastDone&&!pickDone)under+=`<div class="subacts"><button class="ghost" data-act="skip">この問題をとばす</button></div>`;
   app.innerHTML=`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">${esc(lvl)}<small>${sess.i+1} / ${sess.ids.length}</small></div>${s.k==="pick"?'<span style="width:40px"></span>':`<button class="round" data-act="input" data-v="${inputMode()==="type"?"voice":"type"}" aria-label="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}" title="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}">${inputMode()==="type"?IC.mic:IC.key}</button>`}</header>
   ${st.ph==="choose"?"":tabsHTML()}
   <div class="qhead"><h2>${esc(h2)}</h2><p>${esc(sub)}</p></div>
@@ -1352,6 +1357,11 @@ app.addEventListener("click",async e=>{
     if(["core","full"].includes(curStep().k)&&!sess.chosen)st.ph="choose";render();if(st.ph==="ready"&&inputMode()==="type")focusAns()}
   else if(act==="choose"){snap();store.settings.input=b.dataset.v;save();sess.chosen=true;st.ph="ready";render();if(inputMode()==="type")focusAns()}
   else if(act==="finishSet"){snap();finishSet()}
+  else if(act==="skip"){stopRec();snap();banner="";const set=st.set;
+    if(!st.res[st.si])setResult("ng");
+    /* 練習のときは、とばした問題をこの練習の最後にもう一度出す（1回だけ） */
+    if(sess.mode==="practice"){sess.again=sess.again||[];if(!sess.again.includes(set.id)){sess.again.push(set.id);sess.ids.push(set.id)}}
+    finishSet()}
   else if(act==="play"){speak(b.dataset.t)}
   else if(act==="hint"){st.hint++;render();if(inputMode()==="type")focusAns()}
   else if(act==="giveup"){stopRec();setResult("ng");st.ph="revealed";render()}
