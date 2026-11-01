@@ -545,7 +545,8 @@ const SYN={bicycle:"bike",photo:"picture",photos:"pictures",photograph:"picture"
   ate:"had",eat:"have",eating:"having",eaten:"had",drank:"had",drink:"have",drinking:"having",saw:"watched"};
 const DROP=new Set(["a","an","the","some","um","uh","ah","er","oh"]);
 function norm(s){
-  s=String(s).toLowerCase().replace(/[’‘`]/g,"'").replace(/[^a-z0-9' ]+/g," ");
+  /* café → cafe のように、アクセント記号を外してから比べる（音声認識が café と書き起こすことがあるため） */
+  s=String(s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[’‘`]/g,"'").replace(/[^a-z0-9' ]+/g," ");
   return s.split(/\s+/).filter(Boolean).flatMap(w=>{w=w.replace(/^'+|'+$/g,"");return CON[w]?CON[w].split(" "):[w]})
     .map(w=>NUM[w]||SYN[w]||w).join(" ")
     /* 同じ意味の言い方をそろえる（別解として扱う） */
