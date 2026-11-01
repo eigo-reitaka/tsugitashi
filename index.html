@@ -254,7 +254,7 @@ button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .qhead{display:flex;flex-direction:column;gap:4px;text-align:left}
 .qhead h2{margin:0;font-size:23px;font-weight:700;line-height:1.35;letter-spacing:-.01em;text-wrap:balance}
 .qhead p{margin:0;font-size:13.5px;color:var(--muted)}
-.stage{display:flex;flex-direction:column;gap:18px;min-height:300px;padding:20px 0 4px;border:0;border-top:1px solid var(--line2);border-radius:0}
+.stage{display:flex;flex-direction:column;gap:18px;padding:20px 0 4px;border:0;border-top:1px solid var(--line2);border-radius:0}
 .jpq{display:flex;flex-direction:column;gap:4px;padding:16px 18px;border-radius:12px;background:var(--soft)}
 .jpq b{font-size:21px;font-weight:700;line-height:1.5;text-wrap:balance}
 .jpq .jl{font-size:12px;font-weight:700;color:var(--muted)}
@@ -1202,8 +1202,7 @@ function renderPractice(){
       <div class="answer"><button class="play" data-act="play" data-t="${esc(set.core)}">${IC.spk}お手本</button></div>`;
     dock=`<button class="big" data-act="finishSet">${sess.i+1<sess.ids.length?"次の問題へ":"結果を見る"}</button>`;
   }else{
-    if(s.k==="core"){h2="色のついた部分を英語で";sub="まずは結論だけ"}
-    if(s.k==="add"){const a=set.adds[s.i];h2="色のついた部分を英語で";sub="「"+TY(a.t).l+"」を後ろに足す　"+(s.i+1)+" / "+set.adds.length}
+    if(s.k==="core"||s.k==="add"){h2="色のついた部分を英語で";sub=""}
     if(s.k==="full"){h2=isTest()||sess.direct?"英語で言ってみよう":"最初から通して言おう";sub=isTest()?"日本語を見て、一発で全文を言おう":sess.direct?"日本語を見て、全文を英語で言おう":"ヒントなしで挑戦"}
     if(st.ph==="choose"){h2="どうやって練習する？";sub="このあとの問題も同じ方法で進みます。右上のボタンでいつでも切り替えられます"}
     const hl=hintList(),hs=hl.slice(0,st.hint).map(h=>`<div class="note hi">${h}</div>`).join("");
@@ -1252,7 +1251,7 @@ function renderPractice(){
   if(st.ph!=="choose"&&!lastDone&&!pickDone)under+=`<div class="subacts"><button class="ghost" data-act="skip">この問題をとばす</button></div>`;
   app.innerHTML=`<header class="top bar"><span class="navl"><button class="round" data-act="back" aria-label="1つ戻る" title="1つ戻る">${IC.back}</button><button class="homebtn glass" data-act="go" data-v="home" aria-label="ホームに戻る">${IC.home}<span>ホーム</span></button></span><div class="navt">${esc(lvl)}<small>${sess.i+1} / ${sess.ids.length}</small></div>${s.k==="pick"?'<span style="width:40px"></span>':`<button class="round" data-act="input" data-v="${inputMode()==="type"?"voice":"type"}" aria-label="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}" title="${inputMode()==="type"?"声に出す練習に切り替え":"タイピング練習に切り替え"}">${inputMode()==="type"?IC.mic:IC.key}</button>`}</header>
   ${st.ph==="choose"?"":tabsHTML()}
-  <div class="qhead"><h2>${esc(h2)}</h2><p>${esc(sub)}</p></div>
+  <div class="qhead"><h2>${esc(h2)}</h2>${sub?`<p>${esc(sub)}</p>`:""}</div>
   ${st.ph==="choose"?stage:`<section class="glass stage">${promptHTML(set,s)}${stage}</section>`}
   ${under}
   ${banner?`<div class="banner">${esc(banner)}</div>`:""}
@@ -1268,8 +1267,8 @@ function promptHTML(set,s){
     const cls=k=>k===cur?"now":(k<cur?"done":"later");
     const html=sg.parts.map(p=>p.k===null?esc(p.t):`<span class="sg ${cls(p.k)}">${esc(p.t)}</span>`).join("");
     let note="";
-    if(s.k==="core"){const later=set.adds.map(a=>"「"+a.jp+"」").join("");note=`<p class="sgnote"><b>結論</b>${esc(set.coreJp)}</p>${later?`<p class="sgsub">${esc(later)}は、あとで足します</p>`:""}`}
-    else{const a=set.adds[s.i];note=sg.found[s.i]?"":`<p class="sgnote"><b>${esc(TY(a.t).l)}</b>${esc(a.jp)}</p>`}
+    /* 説明の行は出さない（文字を減らす）。元の文の中で場所が見つからない足す情報だけ、下に小さく出す */
+    if(s.k==="add"){const a=set.adds[s.i];note=sg.found[s.i]?"":`<p class="sgnote"><b>${esc(TY(a.t).l)}</b>${esc(a.jp)}</p>`}
     return`<div class="sgbox"><p class="sgline">${html}</p>${note}</div>`}
   return`<div class="jpq">${s.k==="full"&&!isTest()?'<span class="jl">英語にする文（全部）</span>':""}<b>${esc(set.jp)}</b></div>`;
 }
