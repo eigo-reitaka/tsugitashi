@@ -516,6 +516,46 @@ const STEP_TESTS={
     S("K5-5",5,"test","英語を話すとき、間違えるのが怖いですが、毎日練習しています。","間違えるのが怖いです。","I'm afraid of making mistakes.",["I'm scared of making mistakes."],[],[A("when","英語を話すとき","when I speak English"),A("but","毎日練習している","but I practice every day",["but I'm practicing every day"])])]
 };
 Object.values(STEP_TESTS).flat().forEach(s=>{BYID[s.id]=s});
+/* ============ 見直しで追加した別解・修正 ============
+   addAlt：足す情報の別解を追加 / coreAlt：結論の別解を追加 / full：全文まるごとの別解（形が大きく変わる自然な言い方） */
+(()=>{const P={
+  "3-i2":{jp:[0,"困ったら"],addAlt:[[0,["if you have any problems","if you have a problem","if you need anything","if you're in trouble"]]]},
+  "4-w3":{jp:[0,"日本に来る"]},
+  "3-w2":{jp:[0,"相手に言いたいことが伝わると"],addAlt:[[0,["when people understand what I say","when people understand what I mean","when people understand my English"]]]},
+  "3-a2":{coreJp:"日本から来ています。",coreAlt:["I came from Japan.","I come from Japan."],words:["日本から来ている（出身） = I'm from Japan"]},
+  "3-a1":{full:["I had breakfast and coffee.","I had breakfast and some coffee."]},
+  "4-m1":{full:["I had breakfast and coffee at the hotel this morning.","This morning I had breakfast and coffee at the hotel."]},
+  "3-a3":{addAlt:[[0,["and I want to come again","and I'd like to come again","and I want to come here again"]]]},
+  "3-b1":{coreAlt:["I like this shirt."]},
+  "4-m2":{coreAlt:["I like this shirt."]},
+  "3-b4":{addAlt:[[0,["but I want to do it myself","but I want to try by myself","but I want to try it by myself","but I want to do it by myself"]]]},
+  "4-m10":{addAlt:[[1,["but I want to do it myself","but I want to try by myself","but I want to try it by myself","but I want to do it by myself"]]]},
+  "3-s1":{addAlt:[[0,["so I'll take a short break","so I'll rest a little","so I'll take a rest"]]]},
+  "3-s2":{addAlt:[[0,["so let's go together","so we can go there together"]]]},
+  "3-s3":{coreAlt:["The taxi hasn't arrived yet.","The taxi isn't here."]},
+  "4-x3":{addAlt:[[1,["so we cook together a lot","so I often cook with her","so we often cook together"]]]},
+  "4-x4":{addAlt:[[1,["so I'm searching for it","so I'm trying to find it"]]]},
+  "4-m9":{addAlt:[[2,["to buy a bag"]]]},
+  "K1-5":{coreAlt:["I walk my dog."],full:["I walk my dog in the park every morning.","Every morning I walk my dog in the park.","I walk my dog every morning in the park."]},
+  "2-x4":{full:["I work nine to five.","I work from 9 to 5."]},
+  "2-b5":{full:["I drive to work every day.","Every day I drive to work.","I drive to the office every day."]},
+  "2-x1":{full:["I talked about our trip with my friend.","I talked about the trip with my friend.","I talked about our trip with a friend."]},
+  "2-x5":{full:["I sent my mother a message.","I sent my mom a message.","I texted my mom.","I texted my mother."]},
+  "2-w4":{addAlt:[[1,["over the weekend","this weekend"]]]},
+  "4-t4":{addAlt:[[0,["with good coffee"]]]},
+  "4-m7":{addAlt:[[0,["with good coffee"]]]},
+  "4-t3":{addAlt:[[0,["with an English menu"]]]},
+  "4-x2":{addAlt:[[0,["with an English menu"]]]},
+  "K4-4":{addAlt:[[0,["with an English menu"]]]},
+  "K4-3":{addAlt:[[0,["the staff recommended","that the waiter recommended","that the shop staff recommended"]]]},
+};
+for(const id in P){const s=BYID[id],p=P[id];if(!s)continue;
+  if(p.jp)s.adds[p.jp[0]].jp=p.jp[1];
+  if(p.coreJp)s.coreJp=p.coreJp;
+  if(p.words)s.words=p.words;
+  if(p.coreAlt)s.alt=[...s.alt,...p.coreAlt];
+  if(p.addAlt)p.addAlt.forEach(([i,al])=>{s.adds[i].alt=[...s.adds[i].alt,...al]});
+  if(p.full)s.fullAlt=p.full}})();
 /* 本番音声ファイルを差し込む場所： "英文": "音声ファイルのURL" */
 /* お手本の音声ファイル（audio/a001.mp3 など）。文ごとに3人（女性2人・男性1人、全員アメリカ英語）の誰かの声を固定で割り当て済み。
    本番の音声に差し替えるときは、同じファイル名で上書きするだけでよい。ここにない文（総合確認テストなど）は端末の読み上げで再生 */
@@ -599,6 +639,14 @@ function fullTargets(set){
       const lower=strip(c).replace(/^(I|I'm|I'll|I'd)\b/,m=>m).replace(/^([A-Z])(?![A-Z'])/,(m)=>m==="I"?m:m.toLowerCase());
       out.add(first+" "+joinParts(lower,rest.map(k=>cb[k]),rest.map(k=>set.adds[k])))}
   }
+  /* 「もし雨が降ったら、家にいます」のように、if / when / because の文を先に言う形も正解にする */
+  set.adds.forEach((a,k)=>{if(!["if","when","because"].includes(a.t)||out.size>=MAX)return;
+    const rest=set.adds.map((b,j)=>j).filter(j=>j!==k);const lc=strip(set.core).replace(/^([A-Z])(?![A-Z'])/,m=>m);
+    const first=a.en.charAt(0).toUpperCase()+a.en.slice(1);
+    for(const c of cores){const body=strip(c);const b2=/^I\b/.test(body)?body:body.charAt(0).toLowerCase()+body.slice(1);
+      out.add(first+", "+joinParts(b2,rest.map(j=>set.adds[j].en),rest.map(j=>set.adds[j])));
+      (a.alt||[]).forEach(al=>out.add(al.charAt(0).toUpperCase()+al.slice(1)+", "+joinParts(b2,rest.map(j=>set.adds[j].en),rest.map(j=>set.adds[j]))))}});
+  (set.fullAlt||[]).forEach(f=>out.add(f));
   return [...out];
 }
 
@@ -1034,7 +1082,7 @@ function renderHome(){
   <section class="steps more">${[
     {n:6,t:"ステップごとの確認テスト",sub:"ステップ1〜5からそれぞれ5問出題。\nヒントなしで全文言えるか確かめよう！",a:'data-act="go" data-v="tests"',
       bar:(()=>{let ok=0,tot=0;[1,2,3,4,5].forEach(i=>{tot+=STEP_TESTS[i].length;const x=store.tests&&store.tests["st"+i];if(x&&x.best)ok+=x.best});return[ok,tot]})()},
-    {n:7,t:"ランダム出題",sub:"全ステップからランダムで出題。",a:'data-act="mix"',p:""},
+    {n:7,t:"ランダム出題",sub:"ステップ2〜5からランダムで出題。",a:'data-act="mix"',p:""},
     {n:8,t:"総合確認テスト",sub:"ステップ5まで終わったら挑戦しよう！毎回ちがう問題が出ます",a:'data-act="test2"',
       p:(()=>{const x=store.tests&&store.tests.t2;return x&&x.last?`最高 ${x.best} / ${x.last.total}問`:""})()}
   ].map(c=>`<button class="step" ${c.a} style="--tint:var(--tint${c.n})"><span class="sno">${c.n}</span>
@@ -1130,10 +1178,10 @@ let navStack=[],todayQ=null;
 /* 1つ戻る：練習中は1段階前へ（最初の段階なら練習前の画面へ）、それ以外は1つ前の画面へ */
 /* 練習中の「戻る」用に、画面が切り替わる直前の状態を覚えておく */
 let phist=[];
-function snap(){if(sess&&st)phist.push({i:sess.i,resLen:sess.res.length,chosen:sess.chosen,st:{...st,res:{...st.res},picked:[...(st.picked||[])]}})}
+function snap(){if(sess&&st)phist.push({i:sess.i,resLen:sess.res.length,idsLen:sess.ids.length,again:[...(sess.again||[])],chosen:sess.chosen,st:{...st,res:{...st.res},picked:[...(st.picked||[])]}})}
 function goBack(){stopRec();banner="";
   if((view==="practice"||view==="summary")&&phist.length){const h=phist.pop();
-    sess.i=h.i;sess.res.length=h.resLen;sess.chosen=h.chosen;st=h.st;view="practice";render();window.scrollTo(0,0);return}
+    sess.i=h.i;sess.res.length=h.resLen;sess.ids.length=h.idsLen;sess.again=h.again;sess.chosen=h.chosen;st=h.st;view="practice";render();window.scrollTo(0,0);return}
   if(view==="practice"||view==="summary"){view=backTo||"home";render();window.scrollTo(0,0);return}
   view=navStack.pop()||"home";render();window.scrollTo(0,0)}
 function startSession(ids,mode="practice"){phist=[];backTo=view==="practice"||view==="summary"?backTo:view;sess={ids,i:0,res:[],chosen:false,mode};startSet();view="practice";render();window.scrollTo(0,0)}
